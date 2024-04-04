@@ -1,0 +1,6 @@
+Condition,SourceEntity,Permission,Target
+,User1,Read,Datastore1
+,Group1,Write,Compute1
+IpAddress==192.168.1.1,User2,FullControl,Datastore2
+,Role1,Read,Datastore1
+Time==09:00-17:00,User3,Execute,Compute2

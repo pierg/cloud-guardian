@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "cloud-guardian"
+version = "0.1.0"
+description = ""
+authors = ["Piergiuseppe Mallozzi <piergiuseppe.mallozzi@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+networkx = "^3.2.1"
+plotly = "^5.20.0"
+dash = "^2.16.1"
+numpy = "^1.26.4"
+nxviz = "^0.7.4"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.3.0"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+mypy = "^1.9.0"
+autopep8 = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+# Isort configuration
+[tool.isort]
+profile = "black"
+src_paths = ["src", "tests"]
+multi_line_output = 3
+include_trailing_comma = true
+
+# Flake8 configuration
+[tool.flake8]
+max-line-length = 88
+exclude = [
+    '.venv',
+    'build',
+    'dist',
+]
+ignore = [
+    'E203',  # whitespace before ':' (conflicts with Black)
+    'W503',  # line break before binary operator (conflicts with Black)
+]
+
+# Mypy configuration
+[tool.mypy]
+python_version = 3.8
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
