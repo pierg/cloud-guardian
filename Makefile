@@ -1,9 +1,7 @@
-.PHONY: lint format type-check sort-imports nice
+.PHONY: lint type-check sort-imports nice
 
 lint:
-	poetry run autopep8 .
-
-format:
+	poetry run autopep8 --recursive . --in-place
 	poetry run black .
 
 sort-imports:
@@ -12,4 +10,4 @@ sort-imports:
 type-check:
 	poetry run mypy .
 
-nice: lint format sort-imports
+nice: lint sort-imports
