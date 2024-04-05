@@ -2,19 +2,35 @@ from cloud_guardian.iam_model.graph import IAMGraph
 from cloud_guardian.utils.data_generator import generate_fake_iam_policies
 from cloud_guardian.utils.shared import data_path, output_path
 
-data_file = data_path / "fake_iam_policies_new.csv"
-
 # Generate fake IAM policies
-generate_fake_iam_policies(
-    num_nodes=3, num_resources=3, num_permissions=10, file_path=data_file
-)
+config = {
+    "small": {
+        "num_nodes": 3,
+        "num_resources": 3,
+        "num_permissions": 10
+    },
+    "large": {
+        "num_nodes": 30,
+        "num_resources": 30,
+        "num_permissions": 100
+    }
+}
 
-# Import them into the IAMGraph
-iam_graph = IAMGraph()
-iam_graph.parse_csv_and_populate(data_file)
+def generate_iam_graph(config_selected: str):
+    # Select the desired configuration
+    selected_config = config[config_selected]
 
-# Print the graph
-print(iam_graph.graph.nodes(data=True))
+    # Generate fake IAM policies
+    data_file = data_path / f"fake_data_{config_selected}.csv"
+    generate_fake_iam_policies(selected_config["num_nodes"], selected_config["num_resources"], selected_config["num_permissions"], file_path=data_file)
+
+    # Parse the CSV file and populate IAMGraph
+    iam_graph = IAMGraph()
+    iam_graph.parse_csv_and_populate(data_file)
+
+    # Save the IAM graph as PDF
+    iam_graph.save_graph_pdf(output_path / f"iam_graph_{config_selected}.pdf")
 
 
-iam_graph.save_graph_pdf(output_path / "iam_graph.pdf")
+generate_iam_graph("small")
+generate_iam_graph("large")
