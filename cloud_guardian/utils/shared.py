@@ -1,6 +1,6 @@
 from pathlib import Path
 
-repo_path = Path(__file__).parent.parent
+repo_path = Path(__file__).parent.parent.parent
 
 data_path = repo_path / "data"
 
