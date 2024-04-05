@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from iam_model.entities import Compute, Datastore, Entity, Group, Resource, Role, User
+from cloud_guardian.iam_model.identities import Compute, Datastore, Entity, Group, Resource, Role, User
 from iam_model.permission import Condition, IAMAction, Permission
 
 

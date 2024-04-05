@@ -1,5 +1,5 @@
 # Define a sample resource
-from cloud_guardian.iam_model.entities import Resource
+from cloud_guardian.iam_model.identities import Resource
 from cloud_guardian.iam_model.permission import Condition, Effect, IAMAction, Permission
 
 # Example on how to define and check permissions with conditions

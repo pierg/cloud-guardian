@@ -5,7 +5,7 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Union
 from xml.dom.minidom import Entity
 
-from iam_model.entities import Resource
+from cloud_guardian.iam_model.identities import Resource
 
 
 class IAMAction(Enum):
