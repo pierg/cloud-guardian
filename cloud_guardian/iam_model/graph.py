@@ -112,9 +112,22 @@ class IAMGraph:
         self.graph.add_node(id, instance=new_node, type=node_type)
 
         return new_node
+    
+
+    def _calculate_figure_size(self):
+        """Calculate the figure size based on the number of nodes."""
+        total_nodes = len(self.graph.nodes())
+        base_size = 8  # Base size for a moderate number of nodes
+
+        # Scale the base size based on the number of nodes
+        scaling_factor = max(1, total_nodes / 50)  # Adjust the division factor as needed
+        figure_width = base_size * scaling_factor
+        figure_height = base_size * scaling_factor
+
+        return figure_width, figure_height
 
     def save_graph_pdf(self, file_path: Path):
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=self._calculate_figure_size())
 
         # Get nodes by type
         entities = self.get_nodes_by_type("entity")

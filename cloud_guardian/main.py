@@ -13,6 +13,11 @@ config = {
         "num_nodes": 30,
         "num_resources": 30,
         "num_permissions": 100
+    },
+    "larger": {
+        "num_nodes": 300,
+        "num_resources": 300,
+        "num_permissions": 1000
     }
 }
 
@@ -34,3 +39,4 @@ def generate_iam_graph(config_selected: str):
 
 generate_iam_graph("small")
 generate_iam_graph("large")
+generate_iam_graph("larger")
