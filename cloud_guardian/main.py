@@ -5,17 +5,17 @@ from cloud_guardian.utils.shared import data_path, output_path
 # Generate fake IAM policies
 config = {
     "small": {
-        "num_nodes": 3,
+        "num_entities": 3,
         "num_resources": 3,
         "num_permissions": 10
     },
     "large": {
-        "num_nodes": 30,
+        "num_entities": 30,
         "num_resources": 30,
         "num_permissions": 100
     },
     "larger": {
-        "num_nodes": 300,
+        "num_entities": 300,
         "num_resources": 300,
         "num_permissions": 1000
     }
@@ -27,7 +27,7 @@ def generate_iam_graph(config_selected: str):
 
     # Generate fake IAM policies
     data_file = data_path / f"fake_data_{config_selected}.csv"
-    generate_fake_iam_policies(selected_config["num_nodes"], selected_config["num_resources"], selected_config["num_permissions"], file_path=data_file)
+    generate_fake_iam_policies(selected_config["num_entities"], selected_config["num_resources"], selected_config["num_permissions"], file_path=data_file)
 
     # Parse the CSV file and populate IAMGraph
     iam_graph = IAMGraph()

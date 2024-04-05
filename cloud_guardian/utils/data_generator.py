@@ -4,13 +4,13 @@ from pathlib import Path
 
 
 def generate_fake_iam_policies(
-    num_nodes: int, num_resources: int, num_permissions: int, file_path: Path
+    num_entities: int, num_resources: int, num_permissions: int, file_path: Path
 ):
     random.seed(42)  # For reproducibility in examples
 
-    # Split num_nodes randomly into users, groups, and roles
-    users = [f"User{i+1}" for i in range(random.randint(1, num_nodes // 2))]
-    remaining = num_nodes - len(users)
+    # Split num_entities randomly into users, groups, and roles
+    users = [f"User{i+1}" for i in range(random.randint(1, num_entities // 2))]
+    remaining = num_entities - len(users)
     groups = [f"Group{i+1}" for i in range(random.randint(1, remaining // 2))]
     roles = [f"Role{i+1}" for i in range(remaining - len(groups))]
 
@@ -21,9 +21,6 @@ def generate_fake_iam_policies(
 
     # Entity-Resource Actions
     resources_permissions = ["Read", "Write", "Full_Control", "Execute"]
-
-    # Entity-entity Actions
-    entity_permissions = ["Part_Of", "Assume_Role"]
 
     # Conditions
     conditions = ["", "IpAddress==192.168.1.1", "Time==09:00-17:00"]
