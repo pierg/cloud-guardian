@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from cloud_guardian.iam_model.identities import Compute, Datastore, Entity, Group, Resource, Role, User
-from iam_model.permission import Condition, IAMAction, Permission
+from cloud_guardian.iam_model.permission import Condition, IAMAction, Permission
 
 
 @dataclass
