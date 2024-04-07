@@ -55,14 +55,14 @@ class PoliciesFSM:
         self.entities = [
             element for sublist in [users, groups, roles] for element in sublist
         ]
-        self.RESOURCES = [
+        self.resources = [
             f"{resource}_{i}" for resource in RESOURCES for i in range(num_resources)
         ]
 
         # list of allowed transitions
         # 1) transitions entity -[permission]-> resource
         for entity in self.entities:
-            for resource in self.RESOURCES:
+            for resource in self.resources:
                 for permission in PERMISSIONS:
                     if resource not in self.states:
                         self.states[resource] = State(resource)
