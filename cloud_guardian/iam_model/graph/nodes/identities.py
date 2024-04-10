@@ -54,12 +54,14 @@ class Compute(Resource):
 
 
 entity_constructors: Dict[str, Type[Entity]] = {
+    "Entity": Entity,
     "User": User,
     "Group": Group,
     "Role": Role,
 }
 
 resource_constructors: Dict[str, Type[Resource]] = {
+    "Resource": Resource,
     "Datastore": Datastore,
     "Compute": Compute,
 }
@@ -78,11 +80,9 @@ def create_identity(
     """
     if identity_type in entity_constructors:
         constructor = entity_constructors[identity_type]
-        # Assuming entities might use 'name'
-        return constructor(id=identity_id, name=name)
+        return constructor(id=identity_id)
     elif identity_type in resource_constructors:
         constructor = resource_constructors[identity_type]
-        # Assuming resources might use 'type_str'
-        return constructor(id=identity_id, type=type_str)
+        return constructor(id=identity_id)
     else:
         raise ValueError(f"Unknown identity type: {identity_type}")

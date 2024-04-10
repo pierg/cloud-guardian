@@ -110,17 +110,20 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         for u, v, data in iam_graph.graph.edges(data=True)
     }
 
-    # Separate edges based on flowEnabler attribute
-    flow_enabler_edges = [
-        (u, v)
-        for u, v, data in iam_graph.graph.edges(data=True)
-        if data["permission"].is_flow_active()
-    ]
-    other_edges = [
-        (u, v)
-        for u, v, data in iam_graph.graph.edges(data=True)
-        if not data["permission"].is_flow_active()
-    ]
+
+    deny_edges = []
+    other_edges = []
+    flow_enabler_edges =[]
+
+    for u, v, data in iam_graph.graph.edges(data=True):
+        if data["permission"].is_action_denied():
+            deny_edges.append((u, v))
+        else:
+            if data["permission"].is_flow_active():
+                flow_enabler_edges.append((u, v))
+            else:
+                other_edges.append((u, v))
+
     # Draw flowEnabler edges with red arrows
     nx.draw_networkx_edges(
         iam_graph.graph,
@@ -137,18 +140,54 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         iam_graph.graph, pos, edgelist=other_edges, edge_color="black", arrows=True
     )
 
-    nx.draw_networkx_edge_labels(
-        iam_graph.graph, pos, edge_labels=edge_labels, label_pos=0.5, font_size=9
+    # Draw deny edges with dashed lines
+    nx.draw_networkx_edges(
+        iam_graph.graph,
+        pos,
+        edgelist=deny_edges,
+        edge_color="gray",
+        arrows=True,
+        style="dashed",
     )
 
-    # Legend for edge labels
-    # edge_labels_legend = [
-    #     plt.Line2D(
-    #         [0], [0], color="black", lw=1, label=f"{action.name}: {action.value}"
-    #     )
-    #     for action in IAMAction
-    # ]
-    # plt.legend(handles=edge_labels_legend, title="Edge Labels", loc="lower left")
+
+    nx.draw_networkx_edge_labels(
+        iam_graph.graph, pos, edge_labels=edge_labels, label_pos=0.5, font_size=6
+    )
+
+    # Legend for edge types
+    flow_enabler_legend = plt.Line2D(
+        [0],
+        [0],
+        color="red",
+        marker=">",
+        markersize=3,
+        label="Flow Enabler",
+    )
+    other_legend = plt.Line2D(
+        [0],
+        [0],
+        color="black",
+        marker=">",
+        markersize=3,
+        label="Other",
+    )
+    deny_legend = plt.Line2D(
+        [0],
+        [0],
+        color="gray",
+        marker=">",
+        markersize=3,
+        linestyle="--",
+        label="Deny",
+    )
+    second_legend = plt.legend(
+        handles=[flow_enabler_legend, other_legend, deny_legend],
+        title="Edge Types",
+        loc="upper right",
+    )
+    plt.gca().add_artist(second_legend)  # Add the second legend manually
+
 
     plt.axis("off")
     plt.tight_layout()

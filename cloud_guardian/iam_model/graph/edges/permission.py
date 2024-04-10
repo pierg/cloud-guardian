@@ -51,5 +51,9 @@ class Permission:
             condition.evaluate(context) for condition in self.conditions
         )
         action_check = self.action.flow_enabler
-        effect_check = self.effect.ALLOW == Effect.ALLOW
+        effect_check = self.effect == Effect.ALLOW
         return conditions_check and action_check and effect_check
+
+    def is_action_denied(self) -> bool:
+        """Check if the permission is set to deny."""
+        return self.effect == Effect.DENY
