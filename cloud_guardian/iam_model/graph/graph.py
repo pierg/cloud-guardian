@@ -5,7 +5,12 @@ import networkx as nx
 from cloud_guardian.iam_model.graph.edges.action import IAMAction
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.exceptions import ActionNotAllowedException
-from cloud_guardian.iam_model.graph.nodes.identities import Entity, Resource, entity_constructors, resource_constructors
+from cloud_guardian.iam_model.graph.nodes.identities import (
+    Entity,
+    Resource,
+    entity_constructors,
+    resource_constructors,
+)
 from loguru import logger
 
 
@@ -25,48 +30,65 @@ class IAMGraph:
         logger.info(f"Adding node {node.id} of type {node_type}")
         self.type_index[node_type].add(node.id)
 
-
     def add_edge(
         self,
         source_node: Union[Entity, Resource],
         target_node: Union[Entity, Resource],
         permission: Permission,
     ):
-        logger.info(f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}")
+        logger.info(
+            f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}"
+        )
         # Validation
         # Retrieve the IAMAction instance corresponding to the permission's action
         action = permission.action
         valid = False
-        
+
         # Retrieve all class constructors for entities and resources
         all_constructors = {**entity_constructors, **resource_constructors}
 
         for source_types, target_types in action.allowed_between:
             # Check if source_node is an instance of any of the allowed source types
-            if any(isinstance(source_node, all_constructors.get(src_type, type(None))) for src_type in source_types):
+            if any(
+                isinstance(source_node, all_constructors.get(src_type, type(None)))
+                for src_type in source_types
+            ):
                 # Check if target_node is an instance of any of the allowed target types
-                if any(isinstance(target_node, all_constructors.get(tgt_type, type(None))) for tgt_type in target_types):
+                if any(
+                    isinstance(target_node, all_constructors.get(tgt_type, type(None)))
+                    for tgt_type in target_types
+                ):
                     valid = True
                     break
 
         if not valid:
-            logger.error(f"Action not allowed from {source_node.id} to {target_node.id} with action {action.name}")
+            logger.error(
+                f"Action not allowed from {source_node.id} to {target_node.id} with action {action.name}"
+            )
             raise ActionNotAllowedException(source_node, target_node, action)
 
         self.graph.add_edge(source_node.id, target_node.id, permission=permission)
-        logger.info(f"Edge successfully added from {source_node.id} to {target_node.id} with permission {permission.id}")
+        logger.info(
+            f"Edge successfully added from {source_node.id} to {target_node.id} with permission {permission.id}"
+        )
 
-
-
-    def get_all_allowable_actions(self, source_node: Union[Entity, Resource], target_node: Union[Entity, Resource, None] = None) -> Set[IAMAction]:
+    def get_all_allowable_actions(
+        self,
+        source_node: Union[Entity, Resource],
+        target_node: Union[Entity, Resource, None] = None,
+    ) -> Set[IAMAction]:
         """Returns a set of IAMAction instances that are allowable from the specified source node to a target node, or to any target node if target_node is None."""
         allowable_actions = set()
 
         # Log the operation
         if target_node:
-            logger.info(f"Getting allowable actions from {source_node.id} to {target_node.id}")
+            logger.info(
+                f"Getting allowable actions from {source_node.id} to {target_node.id}"
+            )
         else:
-            logger.info(f"Getting all allowable actions from {source_node.id} to any target")
+            logger.info(
+                f"Getting all allowable actions from {source_node.id} to any target"
+            )
 
         # Retrieve all class constructors for entities and resources
         all_constructors = {**entity_constructors, **resource_constructors}
@@ -75,13 +97,19 @@ class IAMGraph:
         for action in IAMAction:
             for source_types, target_types in action.allowed_between:
                 # Check if source node is an instance of any allowed source types
-                if any(isinstance(source_node, all_constructors[src_type]) for src_type in source_types):
+                if any(
+                    isinstance(source_node, all_constructors[src_type])
+                    for src_type in source_types
+                ):
                     print(type(source_node), source_types)
                     if target_node:
                         print(f"target {target_node}")
                         print(f"target types {target_types}")
                         # Check if target node is specified and is an instance of any allowed target types
-                        if any(isinstance(target_node, all_constructors[tgt_type]) for tgt_type in target_types):
+                        if any(
+                            isinstance(target_node, all_constructors[tgt_type])
+                            for tgt_type in target_types
+                        ):
                             print("OK")
                             print(target_node, target_types)
                             allowable_actions.add(action)
@@ -90,12 +118,13 @@ class IAMGraph:
                         allowable_actions.add(action)
 
         if allowable_actions:
-            logger.info(f"Found allowable actions: {[action.name for action in allowable_actions]}")
+            logger.info(
+                f"Found allowable actions: {[action.name for action in allowable_actions]}"
+            )
         else:
             logger.info("No allowable actions found")
 
         return allowable_actions
-
 
     def get_reachable_nodes_from(
         self, source_node: Union[Entity, Resource]

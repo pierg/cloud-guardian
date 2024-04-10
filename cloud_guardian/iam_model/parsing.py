@@ -10,9 +10,7 @@ from cloud_guardian.iam_model.graph.nodes.identities import (
     create_entity,
 )
 
-
 # TODO: Refactor and test
-
 
 
 def parse_csv_and_populate_graph(iam_graph: IAMGraph, csv_file_path: Path):

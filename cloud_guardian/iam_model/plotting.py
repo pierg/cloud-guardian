@@ -110,10 +110,9 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         for u, v, data in iam_graph.graph.edges(data=True)
     }
 
-
     deny_edges = []
     other_edges = []
-    flow_enabler_edges =[]
+    flow_enabler_edges = []
 
     for u, v, data in iam_graph.graph.edges(data=True):
         if data["permission"].is_action_denied():
@@ -150,7 +149,6 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         style="dashed",
     )
 
-
     nx.draw_networkx_edge_labels(
         iam_graph.graph, pos, edge_labels=edge_labels, label_pos=0.5, font_size=6
     )
@@ -170,7 +168,7 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         color="black",
         marker=">",
         markersize=3,
-        label="Other",
+        label="Allowed",
     )
     deny_legend = plt.Line2D(
         [0],
@@ -187,7 +185,6 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         loc="upper right",
     )
     plt.gca().add_artist(second_legend)  # Add the second legend manually
-
 
     plt.axis("off")
     plt.tight_layout()
