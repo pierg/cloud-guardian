@@ -1,13 +1,21 @@
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from cloud_guardian.iam_model.identities import Compute, Datastore, Entity, Group, Resource, Role, User
-from cloud_guardian.iam_model.permission import Condition, IAMAction, Permission
+from cloud_guardian.iam_model.identities import (
+    Compute,
+    Datastore,
+    Entity,
+    Group,
+    Resource,
+    Role,
+    User,
+)
+from cloud_guardian.iam_model.permission import Condition, IAMAction
 
 
 @dataclass
@@ -112,7 +120,6 @@ class IAMGraph:
         self.graph.add_node(id, instance=new_node, type=node_type)
 
         return new_node
-    
 
     def _calculate_figure_size(self):
         """Calculate the figure size based on the number of nodes."""
@@ -120,7 +127,8 @@ class IAMGraph:
         base_size = 8  # Base size for a moderate number of nodes
 
         # Scale the base size based on the number of nodes
-        scaling_factor = max(1, total_nodes / 50)  # Adjust the division factor as needed
+        # Adjust the division factor as needed
+        scaling_factor = max(1, total_nodes / 50)
         figure_width = base_size * scaling_factor
         figure_height = base_size * scaling_factor
 
@@ -212,7 +220,7 @@ class IAMGraph:
 
         # Draw edges with IAMAction enum values as labels
         edge_labels = {
-            (u, v): data["permission"].value[0]
+            (u, v): data["permission"].label
             for u, v, data in self.graph.edges(data=True)
         }
 
@@ -220,12 +228,12 @@ class IAMGraph:
         flow_enabler_edges = [
             (u, v)
             for u, v, data in self.graph.edges(data=True)
-            if data["permission"].flowEnabler
+            if data["permission"].is_flow_active()
         ]
         other_edges = [
             (u, v)
             for u, v, data in self.graph.edges(data=True)
-            if not data["permission"].flowEnabler
+            if not data["permission"].is_flow_active()
         ]
 
         # Draw flowEnabler edges with red arrows

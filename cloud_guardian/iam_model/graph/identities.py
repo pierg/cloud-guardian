@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional, Type, Union
 
 
 @dataclass
@@ -51,3 +51,27 @@ class Datastore(Resource):
 @dataclass
 class Compute(Resource):
     """Defines a Compute resource."""
+
+
+entity_constructors: Dict[str, Union[Type[Entity], Type[Resource]]] = {
+    "Entity": Entity,
+    "Resource": Resource,
+    "User": User,
+    "Group": Group,
+    "Role": Role,
+    "Datastore": Datastore,
+    "Compute": Compute,
+}
+
+
+def create_entity(
+    entity_type: str, entity_id: str, name: Optional[str] = None
+) -> Entity:
+    """
+    Create an entity of the given type with the provided ID and name.
+    This function relies on the entity_constructors registry to find the appropriate constructor.
+    """
+    if entity_type in entity_constructors:
+        return entity_constructors[entity_type](id=entity_id)
+    else:
+        raise ValueError(f"Unknown entity type: {entity_type}")

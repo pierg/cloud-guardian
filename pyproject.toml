@@ -21,6 +21,7 @@ flake8 = "^7.0.0"
 mypy = "^1.9.0"
 autopep8 = "^2.1.0"
 pylint = "^3.1.0"
+autoflake = "^2.3.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -47,12 +48,16 @@ exclude = '''
 )/
 '''
 
-# Isort configuration
+[tool.my_project_tasks.autoflake]
+command = "autoflake --remove-all-unused-imports --recursive --remove-unused-variables --in-place src tests --exclude=__init__.py"
+description = "Remove unused imports and unused variables from the project."
+
 [tool.isort]
 profile = "black"
 src_paths = ["src", "tests"]
 multi_line_output = 3
 include_trailing_comma = true
+
 
 # Flake8 configuration
 [tool.flake8]
