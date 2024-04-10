@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.permission import IAMAction
 
 
 def calculate_figure_size(graph):
@@ -105,12 +104,9 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         verticalalignment="bottom",
     )
 
-    for u, v, data in iam_graph.graph.edges(data=True):
-        print(u, v, data)
-        print(data["permission"].value[0])
     # Draw edges with IAMAction enum values as labels
     edge_labels = {
-        (u, v): data["permission"].value[0]
+        (u, v): data["permission"].label
         for u, v, data in iam_graph.graph.edges(data=True)
     }
 
@@ -118,14 +114,13 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
     flow_enabler_edges = [
         (u, v)
         for u, v, data in iam_graph.graph.edges(data=True)
-        if data["permission"].flowEnabler
+        if data["permission"].is_flow_active()
     ]
     other_edges = [
         (u, v)
         for u, v, data in iam_graph.graph.edges(data=True)
-        if not data["permission"].flowEnabler
+        if not data["permission"].is_flow_active()
     ]
-
     # Draw flowEnabler edges with red arrows
     nx.draw_networkx_edges(
         iam_graph.graph,
@@ -137,7 +132,7 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
         arrowstyle="->",
     )
 
-    # Draw other edges with black arrows (or any color you prefer)
+    # Draw other edges with black arrows
     nx.draw_networkx_edges(
         iam_graph.graph, pos, edgelist=other_edges, edge_color="black", arrows=True
     )
@@ -147,14 +142,13 @@ def save_graph_pdf(iam_graph: IAMGraph, file_path: Path):
     )
 
     # Legend for edge labels
-    # Create handles for the legend, assuming IAMAction is defined with at least READ, WRITE, FULL_CONTROL, EXECUTE, PART_OF
-    edge_labels_legend = [
-        plt.Line2D(
-            [0], [0], color="black", lw=1, label=f"{action.name}: {action.value[0]}"
-        )
-        for action in IAMAction
-    ]
-    plt.legend(handles=edge_labels_legend, title="Edge Labels", loc="lower left")
+    # edge_labels_legend = [
+    #     plt.Line2D(
+    #         [0], [0], color="black", lw=1, label=f"{action.name}: {action.value}"
+    #     )
+    #     for action in IAMAction
+    # ]
+    # plt.legend(handles=edge_labels_legend, title="Edge Labels", loc="lower left")
 
     plt.axis("off")
     plt.tight_layout()

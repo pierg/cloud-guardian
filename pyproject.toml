@@ -12,6 +12,7 @@ plotly = "^5.20.0"
 dash = "^2.16.1"
 numpy = "^1.26.4"
 nxviz = "^0.7.4"
+loguru = "^0.7.2"
 
 
 [tool.poetry.group.dev.dependencies]

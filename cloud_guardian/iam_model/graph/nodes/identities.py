@@ -53,25 +53,36 @@ class Compute(Resource):
     """Defines a Compute resource."""
 
 
-entity_constructors: Dict[str, Union[Type[Entity], Type[Resource]]] = {
-    "Entity": Entity,
-    "Resource": Resource,
+entity_constructors: Dict[str, Type[Entity]] = {
     "User": User,
     "Group": Group,
     "Role": Role,
+}
+
+resource_constructors: Dict[str, Type[Resource]] = {
     "Datastore": Datastore,
     "Compute": Compute,
 }
 
 
-def create_entity(
-    entity_type: str, entity_id: str, name: Optional[str] = None
-) -> Entity:
+def create_identity(
+    identity_type: str,
+    identity_id: str,
+    name: Optional[str] = None,
+    type_str: Optional[str] = None,
+) -> Union[Entity, Resource]:
     """
-    Create an entity of the given type with the provided ID and name.
-    This function relies on the entity_constructors registry to find the appropriate constructor.
+    Create either an entity or resource based on the given type with the provided ID.
+    If 'identity_type' matches an entity, it may also take a 'name'.
+    If 'identity_type' matches a resource, it may also take a 'type_str'.
     """
-    if entity_type in entity_constructors:
-        return entity_constructors[entity_type](id=entity_id)
+    if identity_type in entity_constructors:
+        constructor = entity_constructors[identity_type]
+        # Assuming entities might use 'name'
+        return constructor(id=identity_id, name=name)
+    elif identity_type in resource_constructors:
+        constructor = resource_constructors[identity_type]
+        # Assuming resources might use 'type_str'
+        return constructor(id=identity_id, type=type_str)
     else:
-        raise ValueError(f"Unknown entity type: {entity_type}")
+        raise ValueError(f"Unknown identity type: {identity_type}")

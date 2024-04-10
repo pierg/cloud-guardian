@@ -1,7 +1,7 @@
 {
     "actions": {
       "PART_OF": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["User", "Group"],
             "target": ["Group"]
@@ -11,7 +11,7 @@
         "description": "Represents membership of an user or group within a group."
       },
       "ASSUME_ROLE": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["User", "Group"],
             "target": ["Role"]
@@ -21,7 +21,7 @@
         "description": "Allows a user or group to adopt permissions associated with a role."
       },
       "FULL_CONTROL": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["Entity"],
             "target": ["Resource"]
@@ -31,7 +31,7 @@
         "description": "Generic access control from any entity to a resource."
       },
       "READ": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["Entity"],
             "target": ["Resource"]
@@ -41,7 +41,7 @@
         "description": ""
       },
       "WRITE": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["Entity"],
             "target": ["Resource"]
@@ -51,7 +51,7 @@
         "description": ""
       },
       "EXECUTE": {
-        "allowedBetween": [
+        "allowed_between": [
           {
             "source": ["Entity"],
             "target": ["Resource"]
@@ -61,11 +61,22 @@
         "description": ""
       }
     },
-    "entities": ["User", "Group", "Role"],
-    "resources": ["Compute", "Datastore"],
     "conditions": [
-      "ip_address",
-      "time_between"
+        {
+            "condition_key": "ipAddress",
+            "operators": ["in_range"],
+            "value_type": "cidr"
+        },
+        {
+            "condition_key": "loginTime",
+            "operators": ["time_between"],
+            "value_type": "time_range"
+        },
+        {
+            "condition_key": "userId",
+            "operators": ["equals", "not_equals"],
+            "value_type": "integer"
+        }
     ]
   }
   

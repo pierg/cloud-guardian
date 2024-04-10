@@ -10,5 +10,5 @@ config = {
 }
 
 
-iam_graph = generate_random_IAMGraph(10, 20, 30)
+iam_graph = generate_random_IAMGraph(5, 5, 10)
 save_graph_pdf(iam_graph, output_path / "random_iam_graph.pdf")

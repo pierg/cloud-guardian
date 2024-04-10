@@ -2,9 +2,13 @@ import csv
 from pathlib import Path
 from typing import Union
 
+from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities import Entity, Resource, create_entity
-from cloud_guardian.iam_model.graph.permission import Permission
+from cloud_guardian.iam_model.graph.nodes.identities import (
+    Entity,
+    Resource,
+    create_entity,
+)
 
 
 def parse_csv_and_populate_graph(iam_graph: IAMGraph, csv_file_path: Path):
