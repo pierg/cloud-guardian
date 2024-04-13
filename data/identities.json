@@ -47,18 +47,8 @@
       },
       "KeyManagement": {
         "description": "Services and entities related to the management of encryption keys.",
-        "includes": ["Key", "KeyPolicy"],
+        "includes": [],
         "regex_aws": "(arn:aws:kms:[a-z0-9-]+:[0-9]+:key/.*)"
-      },
-      "Key": {
-        "description": "An encryption key used to secure data in AWS services.",
-        "includes": [],
-        "regex_aws": "arn:aws:kms:[a-z0-9-]+:[0-9]+:key/.*"
-      },
-      "KeyPolicy": {
-        "description": "Policies associated with encryption keys, defining who can access and manage the keys.",
-        "includes": [],
-        "regex_aws": ""
       }
     }
   }
