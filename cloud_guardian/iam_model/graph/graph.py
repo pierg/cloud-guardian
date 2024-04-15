@@ -101,7 +101,6 @@ class IAMGraph:
                     isinstance(source_node, all_constructors[src_type])
                     for src_type in source_types
                 ):
-                    print(type(source_node), source_types)
                     if target_node:
                         print(f"target {target_node}")
                         print(f"target types {target_types}")
@@ -110,8 +109,6 @@ class IAMGraph:
                             isinstance(target_node, all_constructors[tgt_type])
                             for tgt_type in target_types
                         ):
-                            print("OK")
-                            print(target_node, target_types)
                             allowable_actions.add(action)
                     else:
                         # If no specific target node is given, the action is considered allowable

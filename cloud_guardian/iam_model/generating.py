@@ -35,33 +35,33 @@ def generate_random_IAMGraph(
 ) -> IAMGraph:
     graph = IAMGraph()
 
+    all_nodes = []
     # Generate random entities
     for i in range(num_entities):
         entity_str = random.choice(list(entity_constructors.keys()))
         entity_id = f"{entity_str}_{i}"
         entity = create_identity(entity_str, entity_id)
-        graph.add_node(entity)
+        all_nodes.append(entity)
 
-    # Generate random resources
+    # # Generate random resources
     for i in range(num_resources):
         resource_str = random.choice(list(resource_constructors.keys()))
         resource_id = f"{resource_str}_{i}"
         resource = create_identity(resource_str, resource_id, type_str=resource_str)
-        graph.add_node(resource)
+        all_nodes.append(resource)
 
     print(f"Generated {num_entities} entities and {num_resources} resources.")
-
+    
+    known_nodes = []
+    known_permissions = []
     permissions_added = 0
     while permissions_added < num_permissions:
         # Ensures that only pairs with valid actions are considered
         try:
-            source_id, target_id = random.sample(list(graph.graph.nodes()), 2)
+            source_node, target_node = random.sample(all_nodes, 2)
         except ValueError:
             print("Not enough nodes in the graph to continue adding permissions.")
             break
-
-        source_node = graph.graph.nodes[source_id]["instance"]
-        target_node = graph.graph.nodes[target_id]["instance"]
 
         actions = graph.get_all_allowable_actions(source_node, target_node)
         if not actions:
@@ -75,7 +75,20 @@ def generate_random_IAMGraph(
 
         permission = Permission(effect=effect, action=action, conditions=conditions)
 
+        if (source_node, target_node) in known_permissions:
+            continue
+
+        if source_node not in known_nodes:
+            graph.add_node(source_node)
+            known_nodes.append(source_node)
+
+        if target_node not in known_nodes:
+            graph.add_node(target_node)
+            known_nodes.append(target_node)
+
         graph.add_edge(source_node, target_node, permission)
         permissions_added += 1
+
+        known_permissions.append((source_node, target_node))
 
     return graph
