@@ -9,6 +9,10 @@ output_path = repo_path / "output"
 
 constraints_path = data_path / "constraints.json"
 
+identities_path = data_path / "identities.json"
+
+actions_path = data_path / "actions.json"
+
 
 def load_config(file_path):
     with open(file_path, "r") as file:

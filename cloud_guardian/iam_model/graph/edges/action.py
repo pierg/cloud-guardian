@@ -1,6 +1,9 @@
 from enum import Enum
 
 from cloud_guardian.utils.shared import constraints_actions
+import json
+from enum import Enum
+from cloud_guardian.utils.shared import actions_path
 
 
 class BaseIAMAction(Enum):
@@ -23,12 +26,20 @@ class BaseIAMAction(Enum):
         return allowed_between
 
 
+def load_actions_from_json(json_file_path: str):
+    with open(json_file_path, "r") as file:
+        data = json.load(file)
+        return data["actions"]
+
+
 def create_iam_action_enum(actions_data):
-    enum_members = {
-        action.upper(): properties for action, properties in actions_data.items()
-    }
+    enum_members = {}
+    for category, category_actions in actions_data.items():
+        for action, properties in category_actions.items():
+            enum_members[action.upper()] = properties
     IAMAction = Enum("IAMAction", enum_members, type=BaseIAMAction)
     return IAMAction
 
 
-IAMAction = create_iam_action_enum(constraints_actions)
+actions_data = load_actions_from_json(actions_path)
+IAMAction = create_iam_action_enum(actions_data)

@@ -2,51 +2,61 @@
     "identities": {
       "Entity": {
         "description": "Represents any individual or system that can initiate an action within the cloud environment.",
+        "category": "entity",
         "includes": ["User", "Role", "Group", "Service"],
         "regex_aws": "(arn:aws:iam::[0-9]+:user/.*|arn:aws:iam::[0-9]+:role/.*|arn:aws:iam::[0-9]+:group/.*|arn:aws:iam::[0-9]+:service/.*|arn:aws:sts::[0-9]+:assumed-role/.*)"
       },
       "User": {
         "description": "A human or service account that can be authenticated and authorized to take actions on cloud resources.",
+        "category": "entity",
         "includes": [],
         "regex_aws": "arn:aws:iam::[0-9]+:user/.*"
       },
       "Role": {
         "description": "A set of permissions that define what actions are allowed and forbidden by an entity assuming the role.",
+        "category": "entity",
         "includes": [],
         "regex_aws": "arn:aws:iam::[0-9]+:role/.*"
       },
       "Group": {
         "description": "A collection of users under one set of permissions, simplifying the management of access controls.",
+        "category": "entity",
         "includes": [],
         "regex_aws": "arn:aws:iam::[0-9]+:group/.*"
       },
       "Service": {
         "description": "AWS services that perform actions on your behalf to accomplish specific tasks.",
+        "category": "entity",
         "includes": [],
         "regex_aws": "arn:aws:iam::[0-9]+:service/.*"
       },
       "Resource": {
         "description": "Any AWS resource that can be interacted with, such as instances, buckets, or databases.",
+        "category": "resource",
         "includes": ["Compute", "Storage", "Database", "KeyManagement"],
         "regex_aws": "(arn:aws:ec2:[a-z0-9-]+:[0-9]+:instance/.*|arn:aws:s3:::.*|arn:aws:rds:[a-z0-9-]+:[0-9]+:db/.*|arn:aws:kms:[a-z0-9-]+:[0-9]+:key/.*)"
       },
       "Compute": {
         "description": "Compute instances such as virtual machines or container services.",
+        "category": "resource",
         "includes": [],
         "regex_aws": "arn:aws:ec2:[a-z0-9-]+:[0-9]+:instance/.*"
       },
       "Storage": {
         "description": "Storage resources, including object stores and block storage systems.",
+        "category": "resource",
         "includes": [],
         "regex_aws": "arn:aws:s3:::.*"
       },
       "Database": {
         "description": "Database instances, including relational and NoSQL databases.",
+        "category": "resource",
         "includes": [],
         "regex_aws": "arn:aws:rds:[a-z0-9-]+:[0-9]+:db/.*"
       },
       "KeyManagement": {
         "description": "Services and entities related to the management of encryption keys.",
+        "category": "resource",
         "includes": [],
         "regex_aws": "(arn:aws:kms:[a-z0-9-]+:[0-9]+:key/.*)"
       }

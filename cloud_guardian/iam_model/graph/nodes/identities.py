@@ -1,70 +1,61 @@
+import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Type, Union
+from loguru import logger
+from cloud_guardian.utils.shared import identities_path
 
 
 @dataclass
 class Entity:
-    """Defines a base IAM entity. Can be a User, Group, or Role."""
+    """Defines a base IAM entity"""
 
     id: str
+    name: str
+    includes: List[str] = field(default_factory=list)
 
 
-@dataclass
-class User(Entity):
-    """Defines a User entity."""
-
-    name: Optional[str] = None
-
-
-@dataclass
-class Group(Entity):
-    """Defines a Group entity. Groups contain users."""
-
-    name: Optional[str] = None
-    users: List[User] = field(default_factory=list)
-
-    def add_user(self, user: User):
-        """Add a user to the group."""
-        self.users.append(user)
-
-
-@dataclass
-class Role(Entity):
-    """Defines a Role entity. Roles can be associated to multiple policies (inferred from the graph)."""
-
-    name: Optional[str] = None
+def create_entity_class(class_name: str, class_attrs: Dict[str, any]) -> Type[Entity]:
+    return type(class_name, (Entity,), class_attrs)
 
 
 @dataclass
 class Resource:
-    """Defines a base Resource entity. Can be a Datastore or Compute."""
+    """Defines a base Resource entity"""
 
     id: str
+    name: str
     type: Optional[str] = None
 
 
-@dataclass
-class Datastore(Resource):
-    """Defines a Datastore resource."""
+def create_resource_class(
+    class_name: str, class_attrs: Dict[str, any]
+) -> Type[Resource]:
+    return type(class_name, (Resource,), class_attrs)
 
 
-@dataclass
-class Compute(Resource):
-    """Defines a Compute resource."""
+def load_classes_from_json(json_file_path: str) -> Dict[str, Type[Entity]]:
+    with open(json_file_path, "r") as file:
+        data = json.load(file)
+
+        entity_constructors = {}
+        resource_constructors = {}
+
+        for class_name, class_attrs in data["identities"].items():
+            if class_attrs["category"] == "entity":
+                entity_constructors[class_name] = create_entity_class(
+                    class_name, class_attrs
+                )
+            elif class_attrs["category"] == "resource":
+                resource_constructors[class_name] = create_resource_class(
+                    class_name, class_attrs
+                )
+            else:
+                logger.warning(f"unknown class category: {class_attrs['category']}")
+
+        return entity_constructors, resource_constructors
 
 
-entity_constructors: Dict[str, Type[Entity]] = {
-    "Entity": Entity,
-    "User": User,
-    "Group": Group,
-    "Role": Role,
-}
-
-resource_constructors: Dict[str, Type[Resource]] = {
-    "Resource": Resource,
-    "Datastore": Datastore,
-    "Compute": Compute,
-}
+entity_constructors, resource_constructors = load_classes_from_json(identities_path)
 
 
 def create_identity(
@@ -74,15 +65,13 @@ def create_identity(
     type_str: Optional[str] = None,
 ) -> Union[Entity, Resource]:
     """
-    Create either an entity or resource based on the given type with the provided ID.
-    If 'identity_type' matches an entity, it may also take a 'name'.
-    If 'identity_type' matches a resource, it may also take a 'type_str'.
+    Create either an entity or a resource based on the given type with the provided ID.
     """
     if identity_type in entity_constructors:
         constructor = entity_constructors[identity_type]
-        return constructor(id=identity_id)
+        return constructor(id=identity_id, name=name if name else type_str)
     elif identity_type in resource_constructors:
         constructor = resource_constructors[identity_type]
-        return constructor(id=identity_id)
+        return constructor(id=identity_id, name=name if name else type_str)
     else:
-        raise ValueError(f"Unknown identity type: {identity_type}")
+        logger.warning(f"unknown identity type: {identity_type}")
