@@ -31,16 +31,18 @@ def _generate_random_condition() -> Condition:
 
 
 def generate_random_IAMGraph(
-    num_entities: int, num_resources: int, num_permissions: int
+    num_entities: int, num_resources: int, max_num_permissions: int
 ) -> IAMGraph:
     graph = IAMGraph()
 
+    all_entities = []
     all_nodes = []
     # Generate random entities
     for i in range(num_entities):
         entity_str = random.choice(list(entity_constructors.keys()))
         entity_id = f"{entity_str}_{i}"
         entity = create_identity(entity_str, entity_id)
+        all_entities.append(entity)
         all_nodes.append(entity)
 
     # # Generate random resources
@@ -51,44 +53,36 @@ def generate_random_IAMGraph(
         all_nodes.append(resource)
 
     print(f"Generated {num_entities} entities and {num_resources} resources.")
-    
+
     known_nodes = []
-    known_permissions = []
-    permissions_added = 0
-    while permissions_added < num_permissions:
-        # Ensures that only pairs with valid actions are considered
-        try:
-            source_node, target_node = random.sample(all_nodes, 2)
-        except ValueError:
-            print("Not enough nodes in the graph to continue adding permissions.")
-            break
+    num_permissions = 0
 
-        actions = graph.get_all_allowable_actions(source_node, target_node)
-        if not actions:
-            continue
+    random.shuffle(all_nodes)
+    for source_node in all_entities:
+        for target_node in all_nodes:
+            actions = graph.get_all_allowable_actions(source_node, target_node)
+            if not actions:
+                continue
 
-        action = random.sample(list(actions), 1)[0]
+            action = random.sample(list(actions), 1)[0]
+            effect = Effect.DENY if random.random() < 0.2 else Effect.ALLOW
 
-        effect = Effect.DENY if random.random() < 0.2 else Effect.ALLOW
+            conditions = [_generate_random_condition()] if random.random() < 0.1 else []
 
-        conditions = [_generate_random_condition()] if random.random() < 0.1 else []
+            permission = Permission(effect=effect, action=action, conditions=conditions)
 
-        permission = Permission(effect=effect, action=action, conditions=conditions)
+            if source_node not in known_nodes:
+                graph.add_node(source_node)
+                known_nodes.append(source_node)
 
-        if (source_node, target_node) in known_permissions:
-            continue
+            if target_node not in known_nodes:
+                graph.add_node(target_node)
+                known_nodes.append(target_node)
 
-        if source_node not in known_nodes:
-            graph.add_node(source_node)
-            known_nodes.append(source_node)
+            graph.add_edge(source_node, target_node, permission)
+            num_permissions += 1
 
-        if target_node not in known_nodes:
-            graph.add_node(target_node)
-            known_nodes.append(target_node)
-
-        graph.add_edge(source_node, target_node, permission)
-        permissions_added += 1
-
-        known_permissions.append((source_node, target_node))
+            if num_permissions > max_num_permissions:
+                break
 
     return graph
