@@ -35,14 +35,12 @@ def generate_random_IAMGraph(
 ) -> IAMGraph:
     graph = IAMGraph()
 
-    all_entities = []
     all_nodes = []
     # Generate random entities
     for i in range(num_entities):
         entity_str = random.choice(list(entity_constructors.keys()))
         entity_id = f"{entity_str}_{i}"
         entity = create_identity(entity_str, entity_id)
-        all_entities.append(entity)
         all_nodes.append(entity)
 
     # # Generate random resources
@@ -58,8 +56,12 @@ def generate_random_IAMGraph(
     num_permissions = 0
 
     random.shuffle(all_nodes)
-    for source_node in all_entities:
+    for source_node in all_nodes:
         for target_node in all_nodes:
+            # skip edge to self
+            if source_node is target_node:
+                continue
+            
             actions = graph.get_all_allowable_actions(source_node, target_node)
             if not actions:
                 continue
@@ -84,5 +86,10 @@ def generate_random_IAMGraph(
 
             if num_permissions > max_num_permissions:
                 break
-
+            
+    # avoid empty graphs 
+    # (can happen with some combination of unique entities and resources)
+    if num_permissions == 0:
+        return generate_random_IAMGraph(num_entities, num_resources, max_num_permissions)
+    
     return graph
