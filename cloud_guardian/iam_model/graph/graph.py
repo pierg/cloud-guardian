@@ -4,6 +4,7 @@ from typing import Dict, Set, Union
 import networkx as nx
 from cloud_guardian.iam_model.graph.edges.action import IAMAction
 from cloud_guardian.iam_model.graph.edges.permission import Permission
+from cloud_guardian.iam_model.graph.exceptions import ActionNotAllowedException
 from cloud_guardian.iam_model.graph.nodes import (
     entity_constructors,
     resource_constructors,
@@ -40,36 +41,13 @@ class IAMGraph:
         logger.info(
             f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
-        # Validation
-        # Retrieve the IAMAction instance corresponding to the permission's action
-        action = permission.action
-        valid = False
         
-        # TODO: Fix, as now classes are loaded dynamically, they are not hierarchically defined, e.g. Entity -> User, Group, Role
-        # TODO: change the way validation among allowed_between is done, as now it is not working
-
-        # # Retrieve all class constructors for entities and resources
-        # all_constructors = {**entity_constructors, **resource_constructors}
-
-        # for source_types, target_types in action.allowed_between:
-        #     # Check if source_node is an instance of any of the allowed source types
-        #     if any(
-        #         isinstance(source_node, all_constructors.get(src_type, type(None)))
-        #         for src_type in source_types
-        #     ):
-        #         # Check if target_node is an instance of any of the allowed target types
-        #         if any(
-        #             isinstance(target_node, all_constructors.get(tgt_type, type(None)))
-        #             for tgt_type in target_types
-        #         ):
-        #             valid = True
-        #             break
-
-        # if not valid:
-        #     logger.error(
-        #         f"Action not allowed from {source_node.id} to {target_node.id} with action {action.name}"
-        #     )
-        #     raise ActionNotAllowedException(source_node, target_node, action)
+        if permission.action in self.get_all_allowable_actions(source_node, target_node):
+            logger.info(
+                f"Action {permission.action.name} is allowable from {source_node.id} to {target_node.id}"
+            )
+        else:
+            raise ActionNotAllowedException("Action not allowed between nodes")
 
         self.graph.add_edge(source_node.id, target_node.id, permission=permission)
         logger.info(
@@ -83,7 +61,7 @@ class IAMGraph:
     ) -> Set[IAMAction]:
         """Returns a set of IAMActions that are allowable from the source node to the target node."""
         # TODO: if source_node is None, return all actions that are allowed from any source node to the target node, and vice versa
-        
+
         allowable_actions = set()
 
         # Log the operation
@@ -106,7 +84,7 @@ class IAMGraph:
             # source_types and target_types are list of strings
             for source_types, target_types in action.allowed_between:
 
-                # TODO: Fix, same problem as before
+                # TODO: Fix, as now classes are loaded dynamically, they are not hierarchically defined, e.g. Entity -> User, Group, Role
                 # source_types_concrete = get_all_concrete_types for all source types
                 # ["User", "Group", "Role"] fro ["Entity"]
 
