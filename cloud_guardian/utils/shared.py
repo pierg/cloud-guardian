@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+
 repo_path = Path(__file__).parent.parent.parent
 
 data_path = repo_path / "data"
@@ -29,3 +30,4 @@ def extract_conditions(data):
 
 actions = load_config(actions_path)
 constraints_conditions = extract_conditions(actions)
+
