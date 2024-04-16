@@ -78,10 +78,12 @@ class IAMGraph:
 
     def get_all_allowable_actions(
         self,
-        source_node: Union[Entity, Resource],
+        source_node: Union[Entity, Resource, None] = None,
         target_node: Union[Entity, Resource, None] = None,
     ) -> Set[IAMAction]:
-        """Returns a set of IAMAction instances that are allowable from the specified source node to a target node, or to any target node if target_node is None."""
+        """Returns a set of IAMActions that are allowable from the source node to the target node."""
+        # TODO: if source_node is None, return all actions that are allowed from any source node to the target node, and vice versa
+        
         allowable_actions = set()
 
         # Log the operation
