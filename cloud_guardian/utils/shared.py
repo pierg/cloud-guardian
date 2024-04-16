@@ -30,4 +30,3 @@ def extract_conditions(data):
 
 actions = load_config(actions_path)
 constraints_conditions = extract_conditions(actions)
-

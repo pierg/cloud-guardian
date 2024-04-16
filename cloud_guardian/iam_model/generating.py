@@ -4,9 +4,13 @@ from cloud_guardian.iam_model.graph.edges.condition import Condition
 from cloud_guardian.iam_model.graph.edges.effect import Effect
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.nodes import concrete_entities_constructors, concrete_resources_constructors
+from cloud_guardian.iam_model.graph.nodes import (
+    concrete_entities_constructors,
+    concrete_resources_constructors,
+)
 
 from loguru import logger
+
 
 def _generate_random_condition() -> Condition:
     # Define a list of mock conditions for demonstration
@@ -26,8 +30,11 @@ def _generate_random_condition() -> Condition:
         value_type,
     )
 
-def generate_random_IAMGraph(num_entities: int, num_resources: int, max_num_permissions: int) -> IAMGraph:
-    
+
+def generate_random_IAMGraph(
+    num_entities: int, num_resources: int, max_num_permissions: int
+) -> IAMGraph:
+
     graph = IAMGraph()
     all_nodes = []
     known_nodes = set()
@@ -50,7 +57,7 @@ def generate_random_IAMGraph(num_entities: int, num_resources: int, max_num_perm
         create_node(resource_class, "Resource", i)
 
     logger.info(f"Generated {num_entities} entities and {num_resources} resources.")
-    
+
     random.shuffle(all_nodes)
 
     # Randomly choose two nodes and create a permission between them
@@ -76,6 +83,8 @@ def generate_random_IAMGraph(num_entities: int, num_resources: int, max_num_perm
 
     if num_permissions == 0:
         logger.warning("No edges created, generating graph again")
-        return generate_random_IAMGraph(num_entities, num_resources, max_num_permissions)
+        return generate_random_IAMGraph(
+            num_entities, num_resources, max_num_permissions
+        )
 
     return graph

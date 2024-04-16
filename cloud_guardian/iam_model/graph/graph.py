@@ -41,8 +41,10 @@ class IAMGraph:
         logger.info(
             f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
-        
-        if permission.action in self.get_all_allowable_actions(source_node, target_node):
+
+        if permission.action in self.get_all_allowable_actions(
+            source_node, target_node
+        ):
             logger.info(
                 f"Action {permission.action.name} is allowable from {source_node.id} to {target_node.id}"
             )
