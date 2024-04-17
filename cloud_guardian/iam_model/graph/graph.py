@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Set, Union
 
 import networkx as nx
+from cloud_guardian.iam_model.graph import all_constraints
 from cloud_guardian.iam_model.graph.edges import all_action_types
 from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
 from cloud_guardian.iam_model.graph.edges.permission import Permission
@@ -54,7 +55,6 @@ class IAMGraph:
             f"Edge successfully added from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
 
-
     def validate_action(
         self,
         source_node: Union[Entity, Resource],
@@ -62,7 +62,7 @@ class IAMGraph:
         action: str,
     ) -> bool:
         """Check if an action is allowable from the source node to the target node."""
-        return action in self.get_all_allowable_actions(source_node, target_node)  
+        return action in self.get_all_allowable_actions(source_node, target_node)
 
     def get_all_allowable_actions(
         self,
@@ -76,7 +76,6 @@ class IAMGraph:
             actions.add(action_type.get_all_actions())
 
         return actions
-    
 
     def get_all_allowable_actions_types(
         self,
@@ -84,16 +83,18 @@ class IAMGraph:
         target_node: Union[Entity, Resource, None] = None,
     ) -> Set[IAMActionType]:
         """Returns a set of IAMActionTypes that are allowable from the source node to the target node."""
-        # TODO: if source_node is None, return all actions that are allowed from any source node to the target node, and vice versa
+        if source_node is None and target_node is None:
+            logger.error("source AND target are not None")
 
-        allowable_actions = set()
+        if source_node is None:
+            return all_constraints.get_any_source(target_node)
 
-        # TODO: Import from graph.__init__.py, implement the logic there, as it's loaded once at initialization
+        elif target_node is None:
+            return all_constraints.get_any_target(source_node)
 
         # fake implementation
-        allowable_actions = all_action_types
-
-        return allowable_actions
+        # allowable_actions = all_action_types
+        return all_constraints.get(source_node, target_node)
 
     def get_reachable_nodes_from(
         self, source_node: Union[Entity, Resource]
