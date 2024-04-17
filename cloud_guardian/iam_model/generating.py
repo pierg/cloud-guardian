@@ -8,7 +8,6 @@ from cloud_guardian.iam_model.graph.nodes import (
     concrete_entities_constructors,
     concrete_resources_constructors,
 )
-
 from loguru import logger
 
 
@@ -63,7 +62,7 @@ def generate_random_IAMGraph(
     # Randomly choose two nodes and create a permission between them
     while num_permissions < max_num_permissions and len(all_nodes) > 1:
         source_node, target_node = random.sample(all_nodes, 2)
-        actions = graph.get_all_allowable_actions(source_node, target_node)
+        actions = graph.get_all_allowable_actions_types(source_node, target_node)
         if actions:
             action = random.choice(list(actions))
             effect = Effect.DENY if random.random() < 0.2 else Effect.ALLOW
@@ -71,7 +70,6 @@ def generate_random_IAMGraph(
             permission = Permission(effect=effect, action=action, conditions=conditions)
             graph.add_edge(source_node, target_node, permission)
             num_permissions += 1
-            print(f"Added permission from {source_node} to {target_node}")
 
             if source_node not in known_nodes:
                 graph.add_node(source_node)

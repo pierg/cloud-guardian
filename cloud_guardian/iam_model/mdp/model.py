@@ -1,106 +1,82 @@
-import random
+import copy
 from dataclasses import dataclass, field
-import trace
-import networkx as nx
-from typing import Dict, Set, Union, List, Optional, Any, Tuple
+from shutil import SpecialFileError
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from networkx import nodes
-
-from cloud_guardian.iam_model.graph.edges.action import IAMAction
+from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.nodes.models import Entity, Resource
+from loguru import logger
 
 
+from dataclasses import dataclass, field
+from typing import Set, Union, Dict, Any
 
 @dataclass
 class State:
-    nodes: Set[Union[Entity, Resource]] = field(default_factory=set)
+    """Represents a state in the MDP, encapsulating the set of IAM nodes."""
+    entities: Set[Entity] = field(default_factory=set)
+    resources: Set[Resource] = field(default_factory=set)
+    attributes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+    def set_attribute(self, node_id: str, key: str, value: Any):
+        if node_id not in self.attributes:
+            self.attributes[node_id] = {}
+        self.attributes[node_id][key] = value
+
+    def get_attribute(self, node_id: str, key: str) -> Any:
+        return self.attributes.get(node_id, {}).get(key)
+
+
+    def clone(self) -> "State":
+        """Create a deep copy of the state for immutable operations."""
+        new_state = State(nodes=copy.deepcopy(self.nodes), attributes=copy.deepcopy(self.attributes))
+        return new_state
+    
+
 
 @dataclass
 class Transition:
+    """Defines a transition in the MDP from one state to another via an action."""
+
     source: State
-    action: IAMAction
+    action: str
     target: State
+
 
 @dataclass
 class IAMGraphMDP:
-    """
-    A Markov Decision Process model for interacting with an IAMGraph.
-    """
-    # Specification defining all possible behaviours
+    """A Markov Decision Process model for managing an IAMGraph."""
     specification: IAMGraph
-
-    # Implementation, defining chosen behaviour
-    trace: list[Transition] = field(default_factory=list)
+    current_state: State
+    trace: List[Transition] = field(default_factory=list)
 
     def step(self, 
-             source_node: Union[Entity, Resource],
-             action: IAMAction,
-             target_node: Union[Entity, Resource, None] = None) -> Tuple[IAMGraph, float, bool]:
+             source_node: Entity, 
+             action: str, 
+             target_node: Union[Entity, Resource, None] = None) -> Tuple[State, float, bool]:
         """
-        Apply an action to the current state and return the new state, reward, and whether it's terminal.
+        Apply an action to the current state.
         """
-        if action.name == 'CreateRole':
-            reward = self.iamgraph.add_node(target_node)
+        new_state = self.current_state.clone()
 
-        elif action.name == 'CreateKey':
-            # TODO..
+        # Check that action is allowed from the source node
+        self.specification.validate_action(source_node, target_node, action)
+            
+        # TODO from scratch 
+        if action == "AssumeRole":
+            if target_node:
+                new_state.set_attribute(source_node.id, action, target_node.id)
+        elif action == "CreateRole":
+            # TODO
+            pass
 
-        elif action.name == 'AssumeRole':
-            # TODO..
 
 
-        
-        return self.current_state, reward, terminal
+        transition = Transition(source=self.current_state, action=action.action, target=new_state)
+        self.trace.append(transition)
+        self.current_state = new_state
 
-    def add_node(self, node: Union[Entity, Resource]) -> float:
-        """
-        Adds a node to the graph and returns a reward for this action.
+        return new_state
 
-        Args:
-            node (Union[Entity, Resource]): The node to add.
 
-        Returns:
-            float: The reward for adding the node.
-        """
-        if not self.current_state.graph.has_node(node.id):
-            self.current_state.add_node(node)
-            self.rewards['add_node'] = 1.0  # Example reward
-            return 1.0
-        return 0.0
-
-    def add_edge(self, source: Union[Entity, Resource], target: Union[Entity, Resource], permission: Permission) -> float:
-        """
-        Adds an edge to the graph if allowed and returns a reward.
-
-        Args:
-            source (Union[Entity, Resource]): The source node for the edge.
-            target (Union[Entity, Resource]): The target node for the edge.
-            permission (Permission): The permission object defining the edge.
-
-        Returns:
-            float: The reward for adding the edge.
-        """
-        if self.current_state.graph.has_node(source.id) and self.current_state.graph.has_node(target.id):
-            try:
-                self.current_state.add_edge(source, target, permission)
-                self.rewards['add_edge'] = 5.0  # Example reward
-                return 5.0
-            except ActionNotAllowedException:
-                return -1.0
-        return 0.0
-
-    def get_possible_actions(self, node: Union[Entity, Resource]) -> List[IAMAction]:
-        """
-        Determine possible actions from the current state for a given node.
-
-        Args:
-            node (Union[Entity, Resource]): The node to evaluate for possible actions.
-
-        Returns:
-            List[IAMAction]: A list of possible IAMActions.
-        """
-        # Example method body; replace with actual logic
-        return []
-
-# Example usage of IAMGraphMDP would go here...

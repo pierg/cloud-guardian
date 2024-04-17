@@ -1,6 +1,7 @@
+from cloud_guardian.utils.shared import identities_path
+
 from .loaders import load_classes_from_json
 from .utilities import get_concrete_identities
-from cloud_guardian.utils.shared import identities_path
 
 constructors = load_classes_from_json(identities_path)
 

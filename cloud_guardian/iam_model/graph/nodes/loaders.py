@@ -1,7 +1,8 @@
 # nodes/constructor_loader.py
 import json
+
 from loguru import logger
-from cloud_guardian.utils.shared import identities_path
+
 from .models import Entity, Resource
 
 

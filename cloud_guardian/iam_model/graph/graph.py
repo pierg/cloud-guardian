@@ -2,17 +2,15 @@ from dataclasses import dataclass, field
 from typing import Dict, Set, Union
 
 import networkx as nx
-from cloud_guardian.iam_model.graph.edges.action import IAMAction
+from cloud_guardian.iam_model.graph.edges import all_action_types
+from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.exceptions import ActionNotAllowedException
 from cloud_guardian.iam_model.graph.nodes import (
     entity_constructors,
     resource_constructors,
 )
-from cloud_guardian.iam_model.graph.nodes.models import (
-    Entity,
-    Resource,
-)
+from cloud_guardian.iam_model.graph.nodes.models import Entity, Resource
 from loguru import logger
 
 
@@ -42,11 +40,11 @@ class IAMGraph:
             f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
 
-        if permission.action in self.get_all_allowable_actions(
+        if permission.action in self.get_all_allowable_actions_types(
             source_node, target_node
         ):
             logger.info(
-                f"Action {permission.action.name} is allowable from {source_node.id} to {target_node.id}"
+                f"Action {permission.action.id} is allowable from {source_node.id} to {target_node.id}"
             )
         else:
             raise ActionNotAllowedException("Action not allowed between nodes")
@@ -56,50 +54,44 @@ class IAMGraph:
             f"Edge successfully added from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
 
+
+    def validate_action(
+        self,
+        source_node: Union[Entity, Resource],
+        target_node: Union[Entity, Resource],
+        action: str,
+    ) -> bool:
+        """Check if an action is allowable from the source node to the target node."""
+        return action in self.get_all_allowable_actions(source_node, target_node)  
+
     def get_all_allowable_actions(
         self,
         source_node: Union[Entity, Resource, None] = None,
         target_node: Union[Entity, Resource, None] = None,
-    ) -> Set[IAMAction]:
-        """Returns a set of IAMActions that are allowable from the source node to the target node."""
+    ) -> Set[str]:
+        """Returns a set of actions that are allowable from the source node to the target node."""
+        actions = set()
+        action_types = self.get_all_allowable_actions_types(source_node, target_node)
+        for action_type in action_types:
+            actions.add(action_type.get_all_actions())
+
+        return actions
+    
+
+    def get_all_allowable_actions_types(
+        self,
+        source_node: Union[Entity, Resource, None] = None,
+        target_node: Union[Entity, Resource, None] = None,
+    ) -> Set[IAMActionType]:
+        """Returns a set of IAMActionTypes that are allowable from the source node to the target node."""
         # TODO: if source_node is None, return all actions that are allowed from any source node to the target node, and vice versa
 
         allowable_actions = set()
 
-        # Log the operation
-        if target_node:
-            logger.info(
-                f"Getting allowable actions from {source_node.id} to {target_node.id}"
-            )
-        else:
-            logger.info(
-                f"Getting all allowable actions from {source_node.id} to any target"
-            )
+        # TODO: Import from graph.__init__.py, implement the logic there, as it's loaded once at initialization
 
-        # Retrieve all class constructors for entities and resources
-        all_constructors = {**entity_constructors, **resource_constructors}
-
-        allowable_actions = []
-
-        # Iterate through all possible actions to see which are allowable based on the 'allowed_between' constraints
-        for action in IAMAction:
-            # source_types and target_types are list of strings
-            for source_types, target_types in action.allowed_between:
-
-                # TODO: Fix, as now classes are loaded dynamically, they are not hierarchically defined, e.g. Entity -> User, Group, Role
-                # source_types_concrete = get_all_concrete_types for all source types
-                # ["User", "Group", "Role"] fro ["Entity"]
-
-                # Then check if the source node class name is in source_types_concrete and target node class name is in target_types_concrete etc..
-
-                allowable_actions.append(action)
-
-        if allowable_actions:
-            logger.info(
-                f"Found allowable actions: {[action.name for action in allowable_actions]}"
-            )
-        else:
-            logger.info("No allowable actions found")
+        # fake implementation
+        allowable_actions = all_action_types
 
         return allowable_actions
 
