@@ -4,11 +4,11 @@ from cloud_guardian.iam_model.graph.edges.condition import Condition
 from cloud_guardian.iam_model.graph.edges.effect import Effect
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.nodes.identities import (
-    create_identity,
-    entity_constructors,
-    resource_constructors,
+from cloud_guardian.iam_model.graph.nodes import (
+    concrete_entities_constructors,
+    concrete_resources_constructors,
 )
+from loguru import logger
 
 
 def _generate_random_condition() -> Condition:
@@ -31,51 +31,58 @@ def _generate_random_condition() -> Condition:
 
 
 def generate_random_IAMGraph(
-    num_entities: int, num_resources: int, num_permissions: int
+    num_entities: int, num_resources: int, max_num_permissions: int
 ) -> IAMGraph:
+
     graph = IAMGraph()
+    all_nodes = []
+    known_nodes = set()
+    num_permissions = 0
+
+    def create_node(constructor, node_type, index):
+        node_id = f"{constructor.__name__}_{index}"
+        node = constructor(node_id)
+        all_nodes.append(node)
+        logger.info(f"Generated {node_type}: {node_id}")
 
     # Generate random entities
     for i in range(num_entities):
-        entity_str = random.choice(list(entity_constructors.keys()))
-        entity_id = f"{entity_str}_{i}"
-        entity = create_identity(entity_str, entity_id)
-        graph.add_node(entity)
+        entity_class = random.choice(concrete_entities_constructors)
+        create_node(entity_class, "Entity", i)
 
     # Generate random resources
     for i in range(num_resources):
-        resource_str = random.choice(list(resource_constructors.keys()))
-        resource_id = f"{resource_str}_{i}"
-        resource = create_identity(resource_str, resource_id, type_str=resource_str)
-        graph.add_node(resource)
+        resource_class = random.choice(concrete_resources_constructors)
+        create_node(resource_class, "Resource", i)
 
-    print(f"Generated {num_entities} entities and {num_resources} resources.")
+    logger.info(f"Generated {num_entities} entities and {num_resources} resources.")
 
-    permissions_added = 0
-    while permissions_added < num_permissions:
-        # Ensures that only pairs with valid actions are considered
-        try:
-            source_id, target_id = random.sample(list(graph.graph.nodes()), 2)
-        except ValueError:
-            print("Not enough nodes in the graph to continue adding permissions.")
-            break
+    random.shuffle(all_nodes)
 
-        source_node = graph.graph.nodes[source_id]["instance"]
-        target_node = graph.graph.nodes[target_id]["instance"]
+    # Randomly choose two nodes and create a permission between them
+    while num_permissions < max_num_permissions and len(all_nodes) > 1:
+        source_node, target_node = random.sample(all_nodes, 2)
+        actions = graph.get_all_allowable_actions_types(source_node, target_node)
+        if actions:
+            action = random.choice(list(actions))
+            effect = Effect.DENY if random.random() < 0.2 else Effect.ALLOW
+            conditions = [_generate_random_condition()] if random.random() < 0.1 else []
+            permission = Permission(effect=effect, action=action, conditions=conditions)
+            graph.add_edge(source_node, target_node, permission)
+            num_permissions += 1
 
-        actions = graph.get_all_allowable_actions(source_node, target_node)
-        if not actions:
-            continue
+            if source_node not in known_nodes:
+                graph.add_node(source_node)
+                known_nodes.add(source_node)
 
-        action = random.sample(list(actions), 1)[0]
+            if target_node not in known_nodes:
+                graph.add_node(target_node)
+                known_nodes.add(target_node)
 
-        effect = Effect.DENY if random.random() < 0.2 else Effect.ALLOW
-
-        conditions = [_generate_random_condition()] if random.random() < 0.1 else []
-
-        permission = Permission(effect=effect, action=action, conditions=conditions)
-
-        graph.add_edge(source_node, target_node, permission)
-        permissions_added += 1
+    if num_permissions == 0:
+        logger.warning("No edges created, generating graph again")
+        return generate_random_IAMGraph(
+            num_entities, num_resources, max_num_permissions
+        )
 
     return graph

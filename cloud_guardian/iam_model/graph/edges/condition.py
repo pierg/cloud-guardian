@@ -31,6 +31,7 @@ class Condition:
             ),
             None,
         )
+
         if not condition_type:
             raise ValueError(f"Invalid condition key: {condition_key}")
 

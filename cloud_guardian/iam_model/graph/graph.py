@@ -2,15 +2,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Set, Union
 
 import networkx as nx
-from cloud_guardian.iam_model.graph.edges.action import IAMAction
+from cloud_guardian.iam_model.graph import all_constraints
+from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.exceptions import ActionNotAllowedException
-from cloud_guardian.iam_model.graph.nodes.identities import (
-    Entity,
-    Resource,
-    entity_constructors,
-    resource_constructors,
-)
+from cloud_guardian.iam_model.graph.nodes.models import Entity, Resource
 from loguru import logger
 
 
@@ -39,92 +35,61 @@ class IAMGraph:
         logger.info(
             f"Adding edge from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
-        # Validation
-        # Retrieve the IAMAction instance corresponding to the permission's action
-        action = permission.action
-        valid = False
 
-        # Retrieve all class constructors for entities and resources
-        all_constructors = {**entity_constructors, **resource_constructors}
-
-        for source_types, target_types in action.allowed_between:
-            # Check if source_node is an instance of any of the allowed source types
-            if any(
-                isinstance(source_node, all_constructors.get(src_type, type(None)))
-                for src_type in source_types
-            ):
-                # Check if target_node is an instance of any of the allowed target types
-                if any(
-                    isinstance(target_node, all_constructors.get(tgt_type, type(None)))
-                    for tgt_type in target_types
-                ):
-                    valid = True
-                    break
-
-        if not valid:
-            logger.error(
-                f"Action not allowed from {source_node.id} to {target_node.id} with action {action.name}"
+        if permission.action in self.get_all_allowable_actions_types(
+            source_node, target_node
+        ):
+            logger.info(
+                f"Action {permission.action.id} is allowable from {source_node.id} to {target_node.id}"
             )
-            raise ActionNotAllowedException(source_node, target_node, action)
+        else:
+            raise ActionNotAllowedException("Action not allowed between nodes")
 
         self.graph.add_edge(source_node.id, target_node.id, permission=permission)
         logger.info(
             f"Edge successfully added from {source_node.id} to {target_node.id} with permission {permission.id}"
         )
 
-    def get_all_allowable_actions(
+    def validate_action(
         self,
         source_node: Union[Entity, Resource],
+        target_node: Union[Entity, Resource],
+        action: str,
+    ) -> bool:
+        """Check if an action is allowable from the source node to the target node."""
+        return action in self.get_all_allowable_actions(source_node, target_node)
+
+    def get_all_allowable_actions(
+        self,
+        source_node: Union[Entity, Resource, None] = None,
         target_node: Union[Entity, Resource, None] = None,
-    ) -> Set[IAMAction]:
-        """Returns a set of IAMAction instances that are allowable from the specified source node to a target node, or to any target node if target_node is None."""
-        allowable_actions = set()
+    ) -> Set[str]:
+        """Returns a set of actions that are allowable from the source node to the target node."""
+        actions = set()
+        action_types = self.get_all_allowable_actions_types(source_node, target_node)
+        for action_type in action_types:
+            actions.add(action_type.get_all_actions())
 
-        # Log the operation
-        if target_node:
-            logger.info(
-                f"Getting allowable actions from {source_node.id} to {target_node.id}"
-            )
-        else:
-            logger.info(
-                f"Getting all allowable actions from {source_node.id} to any target"
-            )
+        return actions
 
-        # Retrieve all class constructors for entities and resources
-        all_constructors = {**entity_constructors, **resource_constructors}
+    def get_all_allowable_actions_types(
+        self,
+        source_node: Union[Entity, Resource, None] = None,
+        target_node: Union[Entity, Resource, None] = None,
+    ) -> Set[IAMActionType]:
+        """Returns a set of IAMActionTypes that are allowable from the source node to the target node."""
+        if source_node is None and target_node is None:
+            logger.error("source AND target are not None")
 
-        # Iterate through all possible actions to see which are allowable based on the 'allowed_between' constraints
-        for action in IAMAction:
-            for source_types, target_types in action.allowed_between:
-                # Check if source node is an instance of any allowed source types
-                if any(
-                    isinstance(source_node, all_constructors[src_type])
-                    for src_type in source_types
-                ):
-                    print(type(source_node), source_types)
-                    if target_node:
-                        print(f"target {target_node}")
-                        print(f"target types {target_types}")
-                        # Check if target node is specified and is an instance of any allowed target types
-                        if any(
-                            isinstance(target_node, all_constructors[tgt_type])
-                            for tgt_type in target_types
-                        ):
-                            print("OK")
-                            print(target_node, target_types)
-                            allowable_actions.add(action)
-                    else:
-                        # If no specific target node is given, the action is considered allowable
-                        allowable_actions.add(action)
+        if source_node is None:
+            return all_constraints.get_any_source(target_node)
 
-        if allowable_actions:
-            logger.info(
-                f"Found allowable actions: {[action.name for action in allowable_actions]}"
-            )
-        else:
-            logger.info("No allowable actions found")
+        elif target_node is None:
+            return all_constraints.get_any_target(source_node)
 
-        return allowable_actions
+        # fake implementation
+        # allowable_actions = all_action_types
+        return all_constraints.get(source_node, target_node)
 
     def get_reachable_nodes_from(
         self, source_node: Union[Entity, Resource]
