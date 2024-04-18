@@ -3,14 +3,9 @@ from typing import Dict, Set, Union
 
 import networkx as nx
 from cloud_guardian.iam_model.graph import all_constraints
-from cloud_guardian.iam_model.graph.edges import all_action_types
 from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
 from cloud_guardian.iam_model.graph.edges.permission import Permission
 from cloud_guardian.iam_model.graph.exceptions import ActionNotAllowedException
-from cloud_guardian.iam_model.graph.nodes import (
-    entity_constructors,
-    resource_constructors,
-)
 from cloud_guardian.iam_model.graph.nodes.models import Entity, Resource
 from loguru import logger
 

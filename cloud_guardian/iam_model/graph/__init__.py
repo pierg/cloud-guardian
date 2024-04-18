@@ -3,7 +3,6 @@ from cloud_guardian.iam_model.graph.nodes import (
     entity_constructors,
     resource_constructors,
 )
-
 from loguru import logger
 
 
