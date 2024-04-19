@@ -3,13 +3,18 @@
     {
       "ResourceName": "example-bucket",
       "ResourceArn": "arn:aws:s3:::example-bucket",
+      "Service": "Amazon S3",
+      "ResourceType": "Bucket",
       "PolicyDocument": {
         "Version": "2012-10-17",
         "Statement": [
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arn:aws:iam::123456789012:user/Alice"
+              "AWS": [
+                "arn:aws:iam::123456789012:user/Alice",
+                "arn:aws:iam::123456789012:user/Bob"
+              ]
             },
             "Action": [
               "s3:GetObject"
@@ -30,13 +35,19 @@
     {
       "ResourceName": "dev-database",
       "ResourceArn": "arn:aws:dynamodb:us-west-2:123456789012:table/dev-database",
+      "Service": "Amazon DynamoDB",
+      "ResourceType": "Table",
       "PolicyDocument": {
         "Version": "2012-10-17",
         "Statement": [
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arn:aws:iam::123456789012:role/EC2Role"
+              "AWS": [
+                "arn:aws:iam::123456789012:role/EC2Role",
+                "arn:aws:iam::123456789012:role/DataAnalyticsRole" 
+              ],
+              "Service": ["ec2.amazonaws.com", "lambda.amazonaws.com"]
             },
             "Action": [
               "dynamodb:Query",

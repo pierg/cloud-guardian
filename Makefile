@@ -1,4 +1,4 @@
-.PHONY: lint type-check sort-imports nice
+.PHONY: lint type-check sort-imports nice clean
 
 lint:
 	poetry run autopep8 --recursive . --in-place
@@ -12,3 +12,10 @@ type-check:
 	poetry run mypy .
 
 nice: lint sort-imports
+
+clean:
+	find . -type f -name '*.pyc' -delete
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type d -name '.pytest_cache' -exec rm -rf {} +
+	rm -rf .mypy_cache
+	rm -rf .coverage

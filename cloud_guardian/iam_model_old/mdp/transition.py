@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Any
-from cloud_guardian.iam_model.graph.permission.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.models import Entity, Resource
 
 class Action(ABC):
     """Abstract base class for all actions that can be applied to an IAM graph."""
@@ -13,27 +11,22 @@ class Action(ABC):
         """Apply the action to the IAM graph."""
         pass
 
-
 @dataclass
 class CreateNodeAction(Action):
     node_id: str
-    node_category: str # entity or resource
-    node_class: str    # user, group, role, policy, etc.
+    node_type: type  # Expected to be a subclass of Entity or Resource
     properties: Dict[str, Any]
 
     def apply(self, graph: IAMGraph):
-        if self.node_category == 'entity':
-            node = Entity.create_from_dict(self.node_class, self.properties)
-        elif self.node_category == 'resource':
-            node = Resource.create_from_dict(self.node_class, self.properties)
-        graph.add_node(node)
+        node = self.node_type(id=self.node_id, **self.properties)
+        graph.nodes[self.node_id] = node
 
 @dataclass
 class DeleteNodeAction(Action):
     node_id: str
 
     def apply(self, graph: IAMGraph):
-        graph.remove_node(self.node_id)
+        graph.nodes.pop(self.node_id, None)
         # Remove all edges connected to this node
         graph.edges.pop(self.node_id, None)
         for edge_dict in graph.edges.values():
@@ -43,7 +36,7 @@ class DeleteNodeAction(Action):
 class AddPermissionAction(Action):
     source: str
     target: str
-    permission: Permission
+    permission: 'Permission'
 
     def apply(self, graph: IAMGraph):
         graph.edges.setdefault(self.source, {}).setdefault(self.target, self.permission)

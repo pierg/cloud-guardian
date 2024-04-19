@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union
 
-from cloud_guardian.iam_model.graph.edges.actions import IAMActionType
-from cloud_guardian.iam_model.graph.edges.condition import Condition
-from cloud_guardian.iam_model.graph.edges.effect import Effect
+from cloud_guardian.iam_model.graph.permission.actions import IAMActionType
+from cloud_guardian.iam_model.graph.permission.conditions import Condition
+from cloud_guardian.iam_model.graph.permission.effects import Effect
+
+
+
 
 
 @dataclass

@@ -7,8 +7,8 @@ from loguru import logger
 
 @dataclass(frozen=True)
 class IAMActionType:
-    id: str  # e.g. "PolicyManagement"
-    category: str  # e.g. "IAM"
+    id: str  
+    category: str 
     description: str
     regex_aws_action: str
     attributes: Dict[str, any] = field(default_factory=dict)
