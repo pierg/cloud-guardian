@@ -1,0 +1,56 @@
+{
+  "ResourceBasedPolicies": [
+    {
+      "ResourceName": "example-bucket",
+      "ResourceArn": "arn:aws:s3:::example-bucket",
+      "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::123456789012:user/Alice"
+            },
+            "Action": [
+              "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::example-bucket/*",
+            "Condition": {
+              "DateGreaterThan": {
+                "aws:CurrentTime": "2023-01-01T00:00:00Z"
+              },
+              "DateLessThan": {
+                "aws:CurrentTime": "2023-12-31T23:59:59Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ResourceName": "dev-database",
+      "ResourceArn": "arn:aws:dynamodb:us-west-2:123456789012:table/dev-database",
+      "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::123456789012:role/EC2Role"
+            },
+            "Action": [
+              "dynamodb:Query",
+              "dynamodb:Scan"
+            ],
+            "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/dev-database",
+            "Condition": {
+              "ForAllValues:StringEquals": {
+                "dynamodb:LeadingKeys": ["${aws:username}"]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
