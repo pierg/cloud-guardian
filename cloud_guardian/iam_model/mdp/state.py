@@ -10,8 +10,10 @@ from cloud_guardian.iam_model.graph.identities.models import Entity, Resource
 class State:
     """Represents a state in the MDP, encapsulating the set of IAM nodes."""
 
-    entities: Set[Entity] = field(default_factory=set)
-    resources: Set[Resource] = field(default_factory=set)
+    # state of the graph at time t
+    specification: IAMGraph
+
+    # additional attributes for graph nodes
     attributes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def set_attribute(self, node_id: str, key: str, value: Any):
@@ -31,28 +33,40 @@ class State:
 
 
 @dataclass
+class Action:
+    # Can be: 
+    # create_node, 
+    # delete_node, 
+    # add_permission (source, target, permission) between two nodes
+    # remove_permission (source, target, permission) between two nodes
+    # add_attribute: add attribute to a node
+    # remove_attribute: add attribute to a node
+
+
+
+@dataclass
 class Transition:
     """Defines a transition in the MDP from one state to another via an action."""
 
     source: State
-    action: str
+    action: Action
     target: State
+
 
 
 @dataclass
 class IAMGraphMDP:
     """A Markov Decision Process model for managing an IAMGraph."""
 
-    specification: IAMGraph
     current_state: State
     trace: List[Transition] = field(default_factory=list)
 
     def step(
         self,
         source_node: Entity,
-        action: str,
+        action: Action,
         target_node: Union[Entity, Resource, None] = None,
-    ) -> Tuple[State, float, bool]:
+    ):
         """
         Apply an action to the current state.
         """

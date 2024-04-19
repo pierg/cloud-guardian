@@ -1,5 +1,5 @@
-from cloud_guardian.iam_model.graph.edges import all_action_types
-from cloud_guardian.iam_model.graph.nodes import (
+from cloud_guardian.iam_model.graph.permissions import all_action_types
+from cloud_guardian.iam_model.graph.identities import (
     entity_constructors,
     resource_constructors,
 )

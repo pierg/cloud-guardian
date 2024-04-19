@@ -1,0 +1,133 @@
+{
+  "permissions": {
+    "IAM": {
+      "PolicyManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Entity"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Includes actions that manage IAM policies directly linked to potential privilege escalation.",
+        "regex_aws_action": "iam:(CreatePolicy|DeletePolicy|AttachUserPolicy|DetachUserPolicy|AttachGroupPolicy|DetachGroupPolicy|AttachRolePolicy|DetachRolePolicy|PutRolePolicy|DeleteRolePolicy)"
+      },
+      "RoleManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Role"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Actions that can modify or create roles, potentially allowing escalation of privileges.",
+        "regex_aws_action": "iam:(CreateRole|DeleteRole|UpdateAssumeRolePolicy)"
+      },
+      "UserManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["User"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Actions related to user management that could lead to unauthorized privilege changes.",
+        "regex_aws_action": "iam:(CreateUser|DeleteUser|UpdateUser)"
+      },
+      "AccessManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["User", "Role"]
+          }
+        ],
+        "flow_enabler": false,
+        "description": "Actions related to managing access and authentication methods without direct privilege escalation.",
+        "regex_aws_action": "iam:(GetUser|ListUsers|GetRole|ListRoles)"
+      }
+    },
+    "Storage": {
+      "BucketPolicyManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Storage"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Modification of storage bucket policies, which if misconfigured, can lead to unauthorized access escalation.",
+        "regex_aws_action": "s3:(PutBucketPolicy|DeleteBucketPolicy)"
+      },
+      "BucketOperations": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Storage"]
+          }
+        ],
+        "flow_enabler": false,
+        "description": "Operations on storage buckets including listing and retrieving objects without changing permissions.",
+        "regex_aws_action": "s3:(ListBucket|GetObject)"
+      }
+    },
+    "Compute": {
+      "InstanceManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Compute"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Controls over compute instances that can be exploited to escalate privileges, such as changing instance profiles or security groups.",
+        "regex_aws_action": "ec2:(RunInstances|ReplaceIamInstanceProfile|AssociateIamInstanceProfile|DisassociateIamInstanceProfile)"
+      },
+      "InstanceMonitoring": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Compute"]
+          }
+        ],
+        "flow_enabler": false,
+        "description": "Monitoring and reporting features for compute instances which do not inherently enable permission flows or privilege escalation.",
+        "regex_aws_action": "ec2:(DescribeInstances|MonitorInstances)"
+      },
+      "SecurityGroupManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["Compute"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Managing security groups, which can be manipulated to gain unauthorized access or escalate privileges.",
+        "regex_aws_action": "ec2:(AuthorizeSecurityGroupIngress|RevokeSecurityGroupEgress|AuthorizeSecurityGroupEgress|RevokeSecurityGroupIngress)"
+      }
+    },
+    "KeyManagement": {
+      "KeyPolicyManagement": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["KeyManagement"]
+          }
+        ],
+        "flow_enabler": true,
+        "description": "Involves the management of key policies, essential for securing key access and potentially escalating privileges by allowing access to encrypted data.",
+        "regex_aws_action": "kms:(PutKeyPolicy|DeleteKeyPolicy)"
+      },
+      "KeyOperations": {
+        "allowed_between": [
+          {
+            "source": ["User", "Role"],
+            "target": ["KeyManagement"]
+          }
+        ],
+        "flow_enabler": false,
+        "description": "Key operations that involve viewing and using encryption keys without altering access controls or policies.",
+        "regex_aws_action": "kms:(DescribeKey|UseKey)"
+      }
+    }
+  }
+}

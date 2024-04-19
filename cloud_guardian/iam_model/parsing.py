@@ -2,9 +2,9 @@ import csv
 from pathlib import Path
 from typing import Union
 
-from cloud_guardian.iam_model.graph.edges.permission import Permission
+from cloud_guardian.iam_model.graph.permissions.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.nodes.models import Entity, Resource, create_entity
+from cloud_guardian.iam_model.graph.identities.models import Entity, Resource, create_entity
 
 # TODO: Refactor and test
 

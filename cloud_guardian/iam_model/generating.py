@@ -1,10 +1,10 @@
 import random
 
-from cloud_guardian.iam_model.graph.edges.condition import Condition
-from cloud_guardian.iam_model.graph.edges.effect import Effect
-from cloud_guardian.iam_model.graph.edges.permission import Permission
+from cloud_guardian.iam_model.graph.permissions.condition import Condition
+from cloud_guardian.iam_model.graph.permissions.effect import Effect
+from cloud_guardian.iam_model.graph.permissions.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.nodes import (
+from cloud_guardian.iam_model.graph.identities import (
     concrete_entities_constructors,
     concrete_resources_constructors,
 )
