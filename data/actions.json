@@ -1,29 +1,7 @@
 {
-  "actions": {
+  "permissions": {
     "IAM": {
-      "PolicyManagement": {
-        "allowed_between": [
-          {
-            "source": ["User", "Role"],
-            "target": ["Entity"]
-          }
-        ],
-        "flow_enabler": true,
-        "description": "Includes actions that manage IAM policies directly linked to potential privilege escalation.",
-        "regex_aws_action": "iam:(CreatePolicy|DeletePolicy|AttachUserPolicy|DetachUserPolicy|AttachGroupPolicy|DetachGroupPolicy|AttachRolePolicy|DetachRolePolicy|PutRolePolicy|DeleteRolePolicy)"
-      },
-      "RoleManagement": {
-        "allowed_between": [
-          {
-            "source": ["User", "Role"],
-            "target": ["Role"]
-          }
-        ],
-        "flow_enabler": true,
-        "description": "Actions that can modify or create roles, potentially allowing escalation of privileges.",
-        "regex_aws_action": "iam:(CreateRole|DeleteRole|UpdateAssumeRolePolicy)"
-      },
-      "UserManagement": {
+      "CreateUser": {
         "allowed_between": [
           {
             "source": ["User", "Role"],
@@ -31,19 +9,24 @@
           }
         ],
         "flow_enabler": true,
-        "description": "Actions related to user management that could lead to unauthorized privilege changes.",
-        "regex_aws_action": "iam:(CreateUser|DeleteUser|UpdateUser)"
+        "description": "Actions that can create new users, potentially allowing unauthorized access.",
+        "regex_aws_action": "iam:(CreateRole)",
+        "actions": [
+            {"create_node" : {
+              "type": "User"
+            }}
+          ]
       },
-      "AccessManagement": {
+      "CreateRole": {
         "allowed_between": [
           {
             "source": ["User", "Role"],
-            "target": ["User", "Role"]
+            "target": ["Role"]
           }
         ],
-        "flow_enabler": false,
-        "description": "Actions related to managing access and authentication methods without direct privilege escalation.",
-        "regex_aws_action": "iam:(GetUser|ListUsers|GetRole|ListRoles)"
+        "flow_enabler": true,
+        "description": "Actions that can create new roles, potentially allowing unauthorized access.",
+        "regex_aws_action": "iam:(CreateRole)"
       }
     },
     "Storage": {
@@ -68,41 +51,6 @@
         "flow_enabler": false,
         "description": "Operations on storage buckets including listing and retrieving objects without changing permissions.",
         "regex_aws_action": "s3:(ListBucket|GetObject)"
-      }
-    },
-    "Compute": {
-      "InstanceManagement": {
-        "allowed_between": [
-          {
-            "source": ["User", "Role"],
-            "target": ["Compute"]
-          }
-        ],
-        "flow_enabler": true,
-        "description": "Controls over compute instances that can be exploited to escalate privileges, such as changing instance profiles or security groups.",
-        "regex_aws_action": "ec2:(RunInstances|ReplaceIamInstanceProfile|AssociateIamInstanceProfile|DisassociateIamInstanceProfile)"
-      },
-      "InstanceMonitoring": {
-        "allowed_between": [
-          {
-            "source": ["User", "Role"],
-            "target": ["Compute"]
-          }
-        ],
-        "flow_enabler": false,
-        "description": "Monitoring and reporting features for compute instances which do not inherently enable permission flows or privilege escalation.",
-        "regex_aws_action": "ec2:(DescribeInstances|MonitorInstances)"
-      },
-      "SecurityGroupManagement": {
-        "allowed_between": [
-          {
-            "source": ["User", "Role"],
-            "target": ["Compute"]
-          }
-        ],
-        "flow_enabler": true,
-        "description": "Managing security groups, which can be manipulated to gain unauthorized access or escalate privileges.",
-        "regex_aws_action": "ec2:(AuthorizeSecurityGroupIngress|RevokeSecurityGroupEgress|AuthorizeSecurityGroupEgress|RevokeSecurityGroupIngress)"
       }
     },
     "KeyManagement": {

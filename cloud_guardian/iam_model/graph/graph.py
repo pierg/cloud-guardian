@@ -26,6 +26,12 @@ class IAMGraph:
         logger.info(f"Adding node {node.id} of type {node_type}")
         self.type_index[node_type].add(node.id)
 
+    def remove_node(self, node: Union[Entity, Resource]):
+        """Remove a node from the graph."""
+        self.graph.remove_node(node.id)
+        logger.info(f"Removing node {node.id} of type {node.__class__.__name__}")
+        self.type_index[node.__class__.__name__.__init__].remove(node.id)
+
     def add_edge(
         self,
         source_node: Union[Entity, Resource],
