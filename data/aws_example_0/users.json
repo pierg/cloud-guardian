@@ -1,0 +1,29 @@
+{
+    "Users": [
+      {
+        "UserName": "Alice",
+        "UserId": "AIDAEXAMPLE1234",
+        "Arn": "arn:aws:iam::123456789012:user/Alice",
+        "CreateDate": "2020-01-01T12:00:00Z",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "AdminAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
+          }
+        ]
+      },
+      {
+        "UserName": "Bob",
+        "UserId": "BIDEXAMPLE5678",
+        "Arn": "arn:aws:iam::123456789012:user/Bob",
+        "CreateDate": "2020-01-15T12:00:00Z",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "ReadOnlyAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/ReadOnlyAccess"
+          }
+        ]
+      }
+    ]
+  }
+  

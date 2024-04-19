@@ -1,0 +1,40 @@
+{
+  "Roles": [
+    {
+      "RoleName": "EC2Role",
+      "RoleId": "ARIDEXAMPLE1234",
+      "Arn": "arn:aws:iam::123456789012:role/EC2Role",
+      "CreateDate": "2020-01-03T12:00:00Z",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    },
+    {
+      "RoleName": "LambdaExecutionRole",
+      "RoleId": "ARIDEXAMPLE5678",
+      "Arn": "arn:aws:iam::123456789012:role/LambdaExecutionRole",
+      "CreateDate": "2020-02-03T12:00:00Z",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    }
+  ]
+}

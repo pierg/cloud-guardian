@@ -1,0 +1,41 @@
+{
+  "Groups": [
+    {
+      "GroupName": "Developers",
+      "GroupId": "AGIDEXAMPLE1234",
+      "Arn": "arn:aws:iam::123456789012:group/Developers",
+      "CreateDate": "2020-01-02T12:00:00Z",
+      "Users": [
+        {
+          "UserName": "Alice"
+        },
+        {
+          "UserName": "Bob"
+        }
+      ],
+      "AttachedPolicies": [
+        {
+          "PolicyName": "DevS3Access",
+          "PolicyArn": "arn:aws:iam::123456789012:policy/DevS3Access"
+        }
+      ]
+    },
+    {
+      "GroupName": "Admins",
+      "GroupId": "AGIDEXAMPLE6789",
+      "Arn": "arn:aws:iam::123456789012:group/Admins",
+      "CreateDate": "2020-03-01T12:00:00Z",
+      "Users": [
+        {
+          "UserName": "Alice"
+        }
+      ],
+      "AttachedPolicies": [
+        {
+          "PolicyName": "AdminAccess",
+          "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
+        }
+      ]
+    }
+  ]
+}
