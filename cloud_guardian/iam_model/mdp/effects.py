@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Any
-from cloud_guardian.iam_model.graph.permissions.permission import Permission
+from cloud_guardian.iam_model.graph.Attributes.Attribute import Attribute
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities.models import Entity, Resource
 
@@ -15,7 +15,7 @@ class Action(ABC):
 
 
 @dataclass
-class CreateNodeAction(Action):
+class CreateNode(Action):
     node_id: str
     node_category: str # entity or resource
     node_class: str    # user, group, role, policy, etc.
@@ -29,27 +29,36 @@ class CreateNodeAction(Action):
         graph.add_node(node)
 
 @dataclass
-class DeleteNodeAction(Action):
+class DeleteNode(Action):
     node_id: str
 
     def apply(self, graph: IAMGraph):
-        graph.remove_node(self.node_id)
-        # Remove all edges connected to this node
-        graph.edges.pop(self.node_id, None)
-        for edge_dict in graph.edges.values():
-            edge_dict.pop(self.node_id, None)
+        # TODO
+        
+        
+
 
 @dataclass
-class AddPermissionAction(Action):
-    source: str
-    target: str
-    permission: Permission
+class AddAttribute(Action):
+    node_id: str
+    Attribute: Attribute
 
     def apply(self, graph: IAMGraph):
-        graph.edges.setdefault(self.source, {}).setdefault(self.target, self.permission)
+        # TODO:
+        pass
 
 @dataclass
-class RemovePermissionAction(Action):
+class RemoveAttribute(Action):
+    node_id: str
+    Attribute: Attribute
+
+    def apply(self, graph: IAMGraph):
+        # TODO:
+        pass
+
+
+@dataclass
+class RemoveAttribute(Action):
     source: str
     target: str
 
@@ -58,7 +67,7 @@ class RemovePermissionAction(Action):
             del graph.edges[self.source][self.target]
 
 @dataclass
-class ModifyAttributeAction(Action):
+class ModifyAttribute(Action):
     node_id: str
     key: str
     value: Any
@@ -66,6 +75,6 @@ class ModifyAttributeAction(Action):
 
     def apply(self, graph: IAMGraph):
         if self.operation == 'add':
-            graph.nodes[self.node_id].attributes[self.key] = self.value
+            graph.nodes[self.node_id].Attribute[self.key] = self.value
         elif self.operation == 'remove':
-            graph.nodes[self.node_id].attributes.pop(self.key, None)
+            graph.nodes[self.node_id].Attribute.pop(self.key, None)
