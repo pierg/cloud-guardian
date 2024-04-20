@@ -30,13 +30,7 @@
             "Effect": "Allow",
             "Action": [
               "iam:CreateUser",
-              "iam:DeleteUser",
-              "iam:CreateGroup",
-              "iam:DeleteGroup",
-              "iam:AttachUserPolicy",
-              "iam:DetachUserPolicy",
-              "iam:AttachGroupPolicy",
-              "iam:DetachGroupPolicy"
+              "iam:DeleteUser"
             ],
             "Resource": "*"
           }
@@ -55,12 +49,7 @@
               "s3:GetObject",
               "s3:PutObject"
             ],
-            "Resource": "arn:aws:s3:::dev-bucket/*",
-            "Condition": {
-              "StringLike": {
-                "aws:username": "dev-*"
-              }
-            }
+            "Resource": "arn:aws:s3:::dev-bucket/*"
           }
         ]
       }

@@ -4,7 +4,11 @@ from typing import Union
 
 from cloud_guardian.iam_model.graph.permission.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.models import Entity, Resource, create_entity
+from cloud_guardian.iam_model.graph.identities.models import (
+    Entity,
+    Resource,
+    create_entity,
+)
 
 # TODO: Refactor and test
 

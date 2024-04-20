@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 
+
 class Action(ABC):
     """Abstract base class for all actions that can be applied to an IAM graph."""
 
@@ -10,6 +11,7 @@ class Action(ABC):
     def apply(self, graph: IAMGraph):
         """Apply the action to the IAM graph."""
         pass
+
 
 @dataclass
 class CreateNodeAction(Action):
@@ -20,6 +22,7 @@ class CreateNodeAction(Action):
     def apply(self, graph: IAMGraph):
         node = self.node_type(id=self.node_id, **self.properties)
         graph.nodes[self.node_id] = node
+
 
 @dataclass
 class DeleteNodeAction(Action):
@@ -32,14 +35,16 @@ class DeleteNodeAction(Action):
         for edge_dict in graph.edges.values():
             edge_dict.pop(self.node_id, None)
 
+
 @dataclass
 class AddPermissionAction(Action):
     source: str
     target: str
-    permission: 'Permission'
+    permission: "Permission"
 
     def apply(self, graph: IAMGraph):
         graph.edges.setdefault(self.source, {}).setdefault(self.target, self.permission)
+
 
 @dataclass
 class RemovePermissionAction(Action):
@@ -50,6 +55,7 @@ class RemovePermissionAction(Action):
         if self.target in graph.edges.get(self.source, {}):
             del graph.edges[self.source][self.target]
 
+
 @dataclass
 class ModifyAttributeAction(Action):
     node_id: str
@@ -58,7 +64,7 @@ class ModifyAttributeAction(Action):
     operation: str  # 'add' or 'remove'
 
     def apply(self, graph: IAMGraph):
-        if self.operation == 'add':
+        if self.operation == "add":
             graph.nodes[self.node_id].attributes[self.key] = self.value
-        elif self.operation == 'remove':
+        elif self.operation == "remove":
             graph.nodes[self.node_id].attributes.pop(self.key, None)

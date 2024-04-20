@@ -5,6 +5,7 @@ from cloud_guardian.iam_model.graph.permission.permission import Permission
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities.models import Entity, Resource
 
+
 class Action(ABC):
     """Abstract base class for all actions that can be applied to an IAM graph."""
 
@@ -17,16 +18,17 @@ class Action(ABC):
 @dataclass
 class CreateNodeAction(Action):
     node_id: str
-    node_category: str # entity or resource
-    node_class: str    # user, group, role, policy, etc.
+    node_category: str  # entity or resource
+    node_class: str  # user, group, role, policy, etc.
     properties: Dict[str, Any]
 
     def apply(self, graph: IAMGraph):
-        if self.node_category == 'entity':
+        if self.node_category == "entity":
             node = Entity.create_from_dict(self.node_class, self.properties)
-        elif self.node_category == 'resource':
+        elif self.node_category == "resource":
             node = Resource.create_from_dict(self.node_class, self.properties)
         graph.add_node(node)
+
 
 @dataclass
 class DeleteNodeAction(Action):
@@ -39,6 +41,7 @@ class DeleteNodeAction(Action):
         for edge_dict in graph.edges.values():
             edge_dict.pop(self.node_id, None)
 
+
 @dataclass
 class AddPermissionAction(Action):
     source: str
@@ -47,6 +50,7 @@ class AddPermissionAction(Action):
 
     def apply(self, graph: IAMGraph):
         graph.edges.setdefault(self.source, {}).setdefault(self.target, self.permission)
+
 
 @dataclass
 class RemovePermissionAction(Action):
@@ -57,6 +61,7 @@ class RemovePermissionAction(Action):
         if self.target in graph.edges.get(self.source, {}):
             del graph.edges[self.source][self.target]
 
+
 @dataclass
 class ModifyAttributeAction(Action):
     node_id: str
@@ -65,7 +70,7 @@ class ModifyAttributeAction(Action):
     operation: str  # 'add' or 'remove'
 
     def apply(self, graph: IAMGraph):
-        if self.operation == 'add':
+        if self.operation == "add":
             graph.nodes[self.node_id].attributes[self.key] = self.value
-        elif self.operation == 'remove':
+        elif self.operation == "remove":
             graph.nodes[self.node_id].attributes.pop(self.key, None)

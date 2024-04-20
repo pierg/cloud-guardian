@@ -4,9 +4,12 @@ from typing import Any, Dict, List, Set, Tuple, Union
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities.models import Entity, Resource
+
+
 @dataclass
 class State:
     """Represents a state in the MDP, encapsulating an IAM graph and additional attributes."""
+
     graph: IAMGraph
     attributes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
@@ -16,20 +19,24 @@ class State:
     def get_attribute(self, node_id: str, key: str) -> Any:
         return self.attributes.get(node_id, {}).get(key)
 
-    def clone(self) -> 'State':
+    def clone(self) -> "State":
         """Create a deep copy of the state for immutable operations."""
         return copy.deepcopy(self)
+
 
 @dataclass
 class Transition:
     """Defines a transition in the MDP from one state to another via an action."""
+
     source: State
     action: Action
     target: State
 
+
 @dataclass
 class IAMGraphMDP:
     """A Markov Decision Process model for managing an IAMGraph."""
+
     current_state: State
     trace: List[Transition] = field(default_factory=list)
 
@@ -42,11 +49,11 @@ class IAMGraphMDP:
 
     def execute_action(self, state: State, action: Action):
         """Modify the state based on the action."""
-        if action.type == 'add_permission':
+        if action.type == "add_permission":
             # Example implementation detail
-            src_node = action.details['source']
-            trg_node = action.details['target']
-            permission = action.details['permission']
+            src_node = action.details["source"]
+            trg_node = action.details["target"]
+            permission = action.details["permission"]
             state.graph.edges.setdefault(src_node, {}).setdefault(trg_node, permission)
 
     def step(self, action: Action):

@@ -34,14 +34,13 @@ class State:
 
 @dataclass
 class Action:
-    # Can be: 
-    # create_node, 
-    # delete_node, 
+    # Can be:
+    # create_node,
+    # delete_node,
     # add_permission (source, target, permission) between two nodes
     # remove_permission (source, target, permission) between two nodes
     # add_attribute: add attribute to a node
     # remove_attribute: add attribute to a node
-
 
 
 @dataclass
@@ -51,7 +50,6 @@ class Transition:
     source: State
     action: Action
     target: State
-
 
 
 @dataclass

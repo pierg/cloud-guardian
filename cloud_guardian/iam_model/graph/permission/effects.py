@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class Effect(Enum):
     ALLOW = "Allow"
     DENY = "Deny"

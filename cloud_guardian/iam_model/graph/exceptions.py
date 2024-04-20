@@ -1,4 +1,13 @@
-class ActionNotAllowedException(Exception):
-    def __init__(self, source, target, action):
-        message = f"Action '{action.name}' is not allowed from '{source.__class__.__name__}' to '{target.__class__.__name__}'."
-        super().__init__(message)
+
+class ActionNotSupported(Exception):
+    def __init__(self, action):
+        self.action = action
+        self.message = f"Action {action} is not supported"
+        super().__init__(self.message)
+
+
+class ConditionNotSupported(Exception):
+    def __init__(self, condition):
+        self.condition = condition
+        self.message = f"Condition {condition} is not supported"
+        super().__init__(self.message)

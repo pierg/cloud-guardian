@@ -2,15 +2,17 @@
   "Groups": [
     {
       "GroupName": "Developers",
-      "GroupId": "AGIDEXAMPLE1234",
+      "GroupId": "GROUPDEVID",
       "Arn": "arn:aws:iam::123456789012:group/Developers",
       "CreateDate": "2020-01-02T12:00:00Z",
       "Users": [
         {
-          "UserName": "Alice"
+          "UserName": "Alice",
+          "UserArn": "arn:aws:iam::123456789012:user/Alice"
         },
         {
-          "UserName": "Bob"
+          "UserName": "Bob",
+          "UserArn": "arn:aws:iam::123456789012:user/Bob"
         }
       ],
       "AttachedPolicies": [
@@ -22,12 +24,13 @@
     },
     {
       "GroupName": "Admins",
-      "GroupId": "AGIDEXAMPLE6789",
+      "GroupId": "GROUPADMINSID",
       "Arn": "arn:aws:iam::123456789012:group/Admins",
       "CreateDate": "2020-03-01T12:00:00Z",
       "Users": [
         {
-          "UserName": "Alice"
+          "UserName": "Alice",
+          "UserArn": "arn:aws:iam::123456789012:user/Alice"
         }
       ],
       "AttachedPolicies": [

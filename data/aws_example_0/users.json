@@ -2,7 +2,7 @@
     "Users": [
       {
         "UserName": "Alice",
-        "UserId": "AIDAEXAMPLE1234",
+        "UserId": "USERALICEID",
         "Arn": "arn:aws:iam::123456789012:user/Alice",
         "CreateDate": "2020-01-01T12:00:00Z",
         "AttachedPolicies": [
@@ -14,7 +14,7 @@
       },
       {
         "UserName": "Bob",
-        "UserId": "BIDEXAMPLE5678",
+        "UserId": "USERBOBOID",
         "Arn": "arn:aws:iam::123456789012:user/Bob",
         "CreateDate": "2020-01-15T12:00:00Z",
         "AttachedPolicies": [

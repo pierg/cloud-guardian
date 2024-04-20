@@ -16,9 +16,7 @@
                 "arn:aws:iam::123456789012:user/Bob"
               ]
             },
-            "Action": [
-              "s3:GetObject"
-            ],
+            "Action": "s3:GetObject",
             "Resource": "arn:aws:s3:::example-bucket/*",
             "Condition": {
               "DateGreaterThan": {
@@ -45,20 +43,14 @@
             "Principal": {
               "AWS": [
                 "arn:aws:iam::123456789012:role/EC2Role",
-                "arn:aws:iam::123456789012:role/DataAnalyticsRole" 
-              ],
-              "Service": ["ec2.amazonaws.com", "lambda.amazonaws.com"]
+                "arn:aws:iam::123456789012:role/DataAnalyticsRole"
+              ]
             },
             "Action": [
               "dynamodb:Query",
               "dynamodb:Scan"
             ],
-            "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/dev-database",
-            "Condition": {
-              "ForAllValues:StringEquals": {
-                "dynamodb:LeadingKeys": ["${aws:username}"]
-              }
-            }
+            "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/dev-database"
           }
         ]
       }

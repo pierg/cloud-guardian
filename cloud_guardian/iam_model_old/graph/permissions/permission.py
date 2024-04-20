@@ -6,9 +6,6 @@ from cloud_guardian.iam_model.graph.permission.conditions import Condition
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 
 
-
-
-
 @dataclass
 class Permission:
     effect: Effect
