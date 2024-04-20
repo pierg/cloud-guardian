@@ -1,31 +1,22 @@
-from re import U
+import json
 from typing import Union
+
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities import user
-from cloud_guardian.iam_model.graph.permission.permission import PermissionFactory
-from cloud_guardian.iam_model.graph.relationships.relationships import IsPartOf
-from cloud_guardian.utils.shared import aws_example_folder
 from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
-from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
-from cloud_guardian.iam_model.graph.identities.role import Role, RoleFactory
 from cloud_guardian.iam_model.graph.identities.resources import (
     Resource,
     ResourceFactory,
 )
+from cloud_guardian.iam_model.graph.identities.role import Role, RoleFactory
 from cloud_guardian.iam_model.graph.identities.services import (
-    SupportedService,
     ServiceFactory,
+    SupportedService,
 )
-
-from dataclasses import dataclass, field
-from typing import Dict, Set, Union
-
-import networkx as nx
-from loguru import logger
-from numpy import source
-
-from cloud_guardian.iam_model.graph.identities.user import User
-import json
+from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
+from cloud_guardian.iam_model.graph.permission.permission import PermissionFactory
+from cloud_guardian.iam_model.graph.relationships.relationships import IsPartOf
+from cloud_guardian.utils.shared import aws_example_folder
 
 data_folder = aws_example_folder
 
