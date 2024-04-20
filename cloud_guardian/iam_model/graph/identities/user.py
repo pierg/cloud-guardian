@@ -52,12 +52,6 @@ class UserFactory:
             create_date=datetime.fromisoformat(user_dict["CreateDate"]),
         )
 
-    def get_user(self, user_name: str) -> Optional[User]:
-        if user_name in self._instances:
-            return self._instances[user_name]
-        else:
-            return KeyError(f"User '{user_name}' not found.")
-
 
 # json_data = {
 #     "Users": [
