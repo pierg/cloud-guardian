@@ -33,6 +33,7 @@ class DateGreaterThan(SupportedCondition):
         runtime_date = datetime.fromisoformat(runtime_value)
         return runtime_date > condition_date
 
+
 @dataclass(frozen=True)
 class DateLessThan(SupportedCondition):
     condition_value: str
@@ -44,6 +45,7 @@ class DateLessThan(SupportedCondition):
         condition_date = datetime.fromisoformat(self.condition_value)
         runtime_date = datetime.fromisoformat(runtime_value)
         return runtime_date < condition_date
+
 
 @dataclass(frozen=True)
 class IpAddress(SupportedCondition):
@@ -62,11 +64,14 @@ class IpAddress(SupportedCondition):
             )
         return ip_address(runtime_value) in ip_network(self.condition_value)
 
+
 class ConditionFactory:
     _instances = {}
-    _condition_map = {"DateGreaterThan": DateGreaterThan, 
-                      "IpAddress": IpAddress,
-                      "DateLessThan": DateLessThan}
+    _condition_map = {
+        "DateGreaterThan": DateGreaterThan,
+        "IpAddress": IpAddress,
+        "DateLessThan": DateLessThan,
+    }
 
     @classmethod
     def from_dict(cls, condition_dict):

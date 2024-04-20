@@ -15,10 +15,14 @@ class Role:
             f"Role Name: {self.role_name}\nRole ID: {self.role_id}\nARN: {self.arn}\n"
         )
 
+    @property
+    def id(self):
+        return self.arn
+
 
 class RoleFactory:
     _instances = {}
-    
+
     @classmethod
     def get_or_create(cls, role_name, role_id, arn, create_date):
         if role_id not in cls._instances:

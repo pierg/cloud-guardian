@@ -1,4 +1,3 @@
-
 class ActionNotSupported(Exception):
     def __init__(self, action):
         self.action = action

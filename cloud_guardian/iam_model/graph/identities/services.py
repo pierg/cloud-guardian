@@ -9,6 +9,10 @@ class SupportedService:
     def __str__(self):
         return f"{self.service_principal} - {self.description}"
 
+    @property
+    def id(self):
+        return self.service_principal
+
 
 @dataclass(frozen=True)
 class EC2Service(SupportedService):

@@ -31,7 +31,6 @@ class AssumeRole(SupportedAction):
     aws_action: str = "sts:AssumeRole"
 
 
-
 @dataclass(frozen=True)
 class GetObject(SupportedAction):
     id: str = "GetObject"
@@ -82,6 +81,7 @@ class AssumeRole(SupportedAction):
     category: str = "RoleManagement"
     description: str = "Allows a user to assume a specified IAM role."
     aws_action: str = "sts:AssumeRole"
+
 
 @dataclass(frozen=True)
 class DeleteUser(SupportedAction):

@@ -77,7 +77,8 @@ class PermissionFactory:
             actions = [ActionFactory.get_or_create(permission_dict["Action"])]
         else:
             actions = [
-                ActionFactory.get_or_create(action) for action in permission_dict["Action"]
+                ActionFactory.get_or_create(action)
+                for action in permission_dict["Action"]
             ]
         conditions = []
         if "Condition" in permission_dict:
@@ -96,26 +97,22 @@ class PermissionFactory:
         return hashlib.sha256(f"{action_effect}{conditions_str}".encode()).hexdigest()
 
 
-# permission_data = {
-#     "Effect": "Allow",
-#     "Action": ["sts:AssumeRole", "s3:CopyObject"],
-#     "Principal": {
-#               "AWS": [
-#                 "arn:aws:iam::123456789012:user/Alice",
-#                 "arn:aws:iam::123456789012:user/Bob"
-#               ]
-#             },
-#     "Condition": {
-#         "DateGreaterThan": {
-#             "aws:CurrentTime": "2023-01-01T00:00:00Z"
-#         },
-#         "IpAddress": {
-#             "aws:SourceIp": "203.0.113.0/24"
-#         }
-#     },
-#     "Resource": "arn:aws:s3:::example-bucket/*",
-# }
+permission_data = {
+    "Effect": "Allow",
+    "Action": ["sts:AssumeRole", "s3:CopyObject"],
+    "Principal": {
+        "AWS": [
+            "arn:aws:iam::123456789012:user/Alice",
+            "arn:aws:iam::123456789012:user/Bob",
+        ]
+    },
+    "Condition": {
+        "DateGreaterThan": {"aws:CurrentTime": "2023-01-01T00:00:00Z"},
+        "IpAddress": {"aws:SourceIp": "203.0.113.0/24"},
+    },
+    "Resource": "arn:aws:s3:::example-bucket/*",
+}
 
-# permissions = PermissionFactory.from_dict(permission_data)
-# for perm in permissions:
-#     print(perm)
+permissions = PermissionFactory.from_dict(permission_data)
+for perm in permissions:
+    print(perm)

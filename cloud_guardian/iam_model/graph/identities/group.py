@@ -7,36 +7,37 @@ from datetime import datetime
 @dataclass
 class Group:
     group_name: str
-    group_id: str
     arn: str
     create_date: datetime
 
     def __str__(self):
         return (
-            f"Group Name: {self.group_name}\nGroup ID: {self.group_id}\nARN: {self.arn}\n"
+            f"Group Name: {self.group_name}\n\nARN: {self.arn}\n"
             f"Create Date: {self.create_date}\n"
         )
+
+    @property
+    def id(self):
+        return self.arn
 
 
 class GroupFactory:
     _instances = {}
 
     @classmethod
-    def get_or_create(cls, group_name, group_id, arn, create_date):
-        if group_id not in cls._instances:
-            cls._instances[group_id] = Group(
+    def get_or_create(cls, group_name, arn, create_date):
+        if arn not in cls._instances:
+            cls._instances[arn] = Group(
                 group_name=group_name,
-                group_id=group_id,
                 arn=arn,
                 create_date=create_date,
             )
-        return cls._instances[group_id]
+        return cls._instances[arn]
 
     @classmethod
     def from_dict(cls, group_dict):
         return cls.get_or_create(
             group_name=group_dict["GroupName"],
-            group_id=group_dict["GroupId"],
             arn=group_dict["Arn"],
             create_date=datetime.fromisoformat(group_dict["CreateDate"]),
         )

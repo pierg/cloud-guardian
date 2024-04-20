@@ -15,6 +15,10 @@ class Resource:
             f"Service: {self.service}, Resource Type: {self.resource_type}\n"
         )
 
+    @property
+    def id(self):
+        return self.resource_arn
+
 
 class ResourceFactory:
     _instances = {}
