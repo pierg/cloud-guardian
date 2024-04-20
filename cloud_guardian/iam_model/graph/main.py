@@ -1,5 +1,5 @@
 import json
-from typing import Union, List
+from typing import Union, List, Dict, Set
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.helpers import (
@@ -119,6 +119,40 @@ for role_data in data["roles.json"]["Roles"]:
             f"added relationship between {user.user_name} and role {role.role_name}: can assume role"
         )
 
+# mapping between permissions (ARN) and targets
+# TODO: process resources_policies.json
+permissions_to_targets: Dict[str, Set[Resource]] = {}
+for policy in data["identities_policies.json"]["IdentityBasedPolicies"]:
+    arn = policy["PolicyArn"]
+
+    for statement in policy["PolicyDocument"]["Statement"]:
+        target_resource = statement["Resource"]
+
+        if target_resource == "*":
+            for resource in ResourceFactory._instances:
+                permissions_to_targets.setdefault(arn, set()).add(
+                    ResourceFactory.get_or_create(
+                        resource_name=extract_identifier_from_ARN(
+                            resource
+                        ),  # TODO: refactor to extract it from resources_policies.json
+                        resource_arn=resource,
+                        service=None,  # TODO: refactor to extract it from resources_policies.json
+                        resource_type=None,  # TODO: refactor to extract it from resources_policies.json
+                    )
+                )
+        else:
+            permissions_to_targets.setdefault(arn, set()).add(
+                ResourceFactory.get_or_create(
+                    resource_name=extract_identifier_from_ARN(
+                        target_resource
+                    ),  # TODO: refactor to extract it from resources_policies.json
+                    resource_arn=target_resource,
+                    service=None,  # TODO: refactor to extract it from resources_policies.json
+                    resource_type=None,  # TODO: refactor to extract it from resources_policies.json)
+                )
+            )
+
+
 # Users permissions
 for user_data in data["users.json"]["Users"]:
     user = UserFactory.get_or_create(
@@ -138,11 +172,13 @@ for user_data in data["users.json"]["Users"]:
             conditions=[],
         )
 
-        # FIXME: how do we define the target here? (I am temporarily using `None`)
-        graph.add_relationship(HasPermission(user, target=None, permission=permission))
-        logger.info(
-            f"added relationship between {user.user_name} and {None}: {permission.action} [{permission.effect}]"
-        )
+        for target in permissions_to_targets.get(arn, []):
+            graph.add_relationship(
+                HasPermission(user, target=target, permission=permission)
+            )
+            logger.info(
+                f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
+            )
 
 # Groups
 for group_data in data["groups.json"]["Groups"]:
@@ -150,8 +186,9 @@ for group_data in data["groups.json"]["Groups"]:
     users_belonging_to_group: List[User] = []
 
     for group_policy in group_data["AttachedPolicies"]:
+        arn = group_policy["PolicyArn"]
         permission = PermissionFactory.get_or_create(
-            action=ActionFactory.get_or_create(group_policy["PolicyArn"]),
+            action=ActionFactory.get_or_create(arn),
             effect=Effect(
                 Effect.ALLOW
             ),  # NOTE: do we assume all permissions ALLOW by default?
@@ -167,13 +204,13 @@ for group_data in data["groups.json"]["Groups"]:
     # add the relationship for each user being part of the group (per permission)
     for user in users_belonging_to_group:
         for permission in permissions:
-            # FIXME: how do we define the target here? (I am temporarily using `None`)
-            graph.add_relationship(
-                HasPermission(user, target=None, permission=permission)
-            )
-            logger.info(
-                f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {None}: {permission.action} [{permission.effect}]"
-            )
+            for target in permissions_to_targets.get(arn, []):
+                graph.add_relationship(
+                    HasPermission(user, target=target, permission=permission)
+                )
+                logger.info(
+                    f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {target.resource_name}: {permission.action} [{permission.effect}]"
+                )
 
 
 # Permissions can be instantiated and retried from the "Statement" filed in the jsons, e.g. :

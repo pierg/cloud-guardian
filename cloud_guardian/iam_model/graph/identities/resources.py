@@ -8,6 +8,26 @@ class Resource:
     service: str
     resource_type: str
 
+    def __hash__(self):
+        return hash(
+            (self.resource_name, self.resource_arn, self.service, self.resource_type)
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, Resource):
+            return False
+        return (
+            self.resource_name,
+            self.resource_arn,
+            self.service,
+            self.resource_type,
+        ) == (
+            other.resource_name,
+            other.resource_arn,
+            other.service,
+            other.resource_type,
+        )
+
     def __str__(self):
         return (
             f"Resource Name: {self.resource_name}, ARN: {self.resource_arn}, "
