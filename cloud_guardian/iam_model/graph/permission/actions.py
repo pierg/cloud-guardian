@@ -139,8 +139,7 @@ class ActionFactory:
         PutObject.aws_action: PutObject,
         Any.aws_action: Any,
         AssumeRole.aws_action: AssumeRole,
-        # TODO: should all actions be defined and listed
-        # in the code?
+        # NOTE: should all actions be defined and listed in the code?
         DevS3Access.aws_action: DevS3Access,
         ReadOnly.aws_action: ReadOnly,
         Admin.aws_action: Admin,

@@ -53,6 +53,11 @@ for file_name in json_files:
         data[file_name] = json.load(file)
 
 # Parse identities
+
+# FIXME: do not necessarily contain all users
+# (see for instance: `roles.json` -> `arn:aws:iam::123456789012:root`)
+# I would therefore recommend to parse _all_ files to detect all users
+# to detect potential misconfigurations
 for user_data in data["users.json"]["Users"]:
     UserFactory.from_dict(user_data)
 
@@ -96,8 +101,6 @@ for group_data in data["groups.json"]["Groups"]:
         graph.add_relationship(IsPartOf(user, group))
 
 
-# TODO: Parse the rest of the relationships (see relationships.py)
-
 # Can Assume Role relationships
 for role_data in data["roles.json"]["Roles"]:
     role = RoleFactory.from_dict(role_data)
@@ -132,11 +135,11 @@ for user_data in data["users.json"]["Users"]:
             action=ActionFactory.get_or_create(arn),
             effect=Effect(
                 Effect.ALLOW
-            ),  # TODO: do we assume all permissions ALLOW by default?
+            ),  # NOTE: do we assume all permissions ALLOW by default?
             conditions=[],
         )
 
-        # TODO: how do we define the target here? (I am temporarily using `None`)
+        # FIXME: how do we define the target here? (I am temporarily using `None`)
         graph.add_relationship(HasPermission(user, target=None, permission=permission))
         logger.info(
             f"added relationship between {user.user_name} and {None}: {permission.action} [{permission.effect}]"
@@ -152,7 +155,7 @@ for group_data in data["groups.json"]["Groups"]:
             action=ActionFactory.get_or_create(group_policy["PolicyArn"]),
             effect=Effect(
                 Effect.ALLOW
-            ),  # TODO: do we assume all permissions ALLOW by default?
+            ),  # NOTE: do we assume all permissions ALLOW by default?
             conditions=[],
         )
         permissions.append(permission)
@@ -162,10 +165,10 @@ for group_data in data["groups.json"]["Groups"]:
             UserFactory._instances[user_data["UserArn"]],
         )
 
-    # add the relationship for each user being part of the group
+    # add the relationship for each user being part of the group (per permission)
     for user in users_belonging_to_group:
         for permission in permissions:
-            # TODO: how do we define the target here? (I am temporarily using `None`)
+            # FIXME: how do we define the target here? (I am temporarily using `None`)
             graph.add_relationship(
                 HasPermission(user, target=None, permission=permission)
             )
