@@ -2,6 +2,9 @@ import json
 from typing import Union
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
+from cloud_guardian.iam_model.graph.helpers import (
+    extract_policy_from_arn,
+)
 from cloud_guardian.iam_model.graph.identities import user
 from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
 from cloud_guardian.iam_model.graph.identities.resources import (
@@ -18,8 +21,13 @@ from cloud_guardian.iam_model.graph.permission.permission import PermissionFacto
 from cloud_guardian.iam_model.graph.relationships.relationships import (
     IsPartOf,
     CanAssumeRole,
+    HasPermission,
+)
+from cloud_guardian.iam_model.graph.permission.actions import (
+    ActionFactory,
 )
 from cloud_guardian.utils.shared import aws_example_folder
+from cloud_guardian.iam_model.graph.permission.effects import Effect
 
 from loguru import logger
 
@@ -99,6 +107,30 @@ for role_data in data["roles.json"]["Roles"]:
             logger.error(e)
 
         graph.add_relationship(CanAssumeRole(user, role))
+
+# Users permissions
+for user_data in data["users.json"]["Users"]:
+    # TODO: implement a mechanism to ensure that the list of users is complete
+    try:
+        user = UserFactory._instances[user_data["Arn"]]
+    except KeyError as e:
+        logger.error(e)
+
+    for policy_data in user_data["AttachedPolicies"]:
+        arn = policy_data["PolicyArn"]
+        policy = extract_policy_from_arn(arn)
+
+        permission = PermissionFactory.get_or_create(
+            action=ActionFactory.get_or_create(arn),
+            effect=Effect(
+                Effect.ALLOW
+            ),  # TODO: do we assume all permissions ALLOW by default?
+            conditions=[],
+        )
+
+        # TODO: how do we define the target here? (I am temporarily using `None``)
+        graph.add_relationship(HasPermission(user, target=None, permission=permission))
+
 
 # users.json and groups.jsons contain keys for the policy attached to them, so it means that they have all the permissions related to those policy keys, n.b. identity based polices also contain resources as "arn:aws:s3:::example-bucket/*", so that could match multiple resource in the graph.
 # So we can have user -> haspermission (permsision_x) -> resource_1

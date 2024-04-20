@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 
 from cloud_guardian.iam_model.graph.exceptions import ActionNotSupported
+from cloud_guardian.iam_model.graph.helpers import (
+    extract_policy_from_ARN,
+)
+import re
 
 
 @dataclass(frozen=True)
@@ -20,6 +24,24 @@ class Any(SupportedAction):
     category: str = "Admin"
     description: str = "Allows any action to be performed. This is a wildcard action."
     aws_action: str = "*"
+
+
+@dataclass(frozen=True)
+class Admin(SupportedAction):
+    id: str = "AdminAccess"
+    category: str = "Admin"
+    description: str = (
+        "Grants full administrative access to AWS resources for a specified IAM role."
+    )
+    aws_action: str = "AdminAccess"
+
+
+@dataclass(frozen=True)
+class ReadOnly(SupportedAction):
+    id: str = "ReadOnlyAccess"
+    category: str = "DataManagement"
+    description: str = "Grants read-only access to various AWS resources and services."
+    aws_action: str = "ReadOnlyAccess"
 
 
 @dataclass(frozen=True)
@@ -58,9 +80,7 @@ class CopyObject(SupportedAction):
 class DeleteObject(SupportedAction):
     id: str = "DeleteObject"
     category: str = "DataManagement"
-    description: str = (
-        "Allows deleting an object in S3. Used together with CopyObject to simulate moving an object."
-    )
+    description: str = "Allows deleting an object in S3. Used together with CopyObject to simulate moving an object."
     aws_action: str = "s3:DeleteObject"
 
 
@@ -90,6 +110,13 @@ class DeleteUser(SupportedAction):
     aws_action: str = "iam:DeleteUser"
 
 
+def is_supported_action(action, actions_types):
+    for action_type in actions_types:
+        if re.search(action, action_type, re.IGNORECASE):
+            return True
+    return False
+
+
 class ActionFactory:
     _instances = {}
     _action_types = {
@@ -100,14 +127,19 @@ class ActionFactory:
         DeleteUser.aws_action: DeleteUser,
         GetObject.aws_action: GetObject,
         PutObject.aws_action: PutObject,
+        ReadOnly.aws_action: ReadOnly,
+        Admin.aws_action: Admin,
         Any.aws_action: Any,
         AssumeRole.aws_action: AssumeRole,
     }
 
     @classmethod
     def get_or_create(cls, aws_action: str):
+        aws_action = extract_policy_from_ARN(aws_action)
         if aws_action not in cls._instances:
-            if aws_action in cls._action_types:
+            # TODO: should be refactor to properly support wildcards
+            # and the different IAM policy formats
+            if is_supported_action(aws_action, cls._action_types):
                 action_class = cls._action_types[aws_action]
                 cls._instances[aws_action] = action_class()
             else:
