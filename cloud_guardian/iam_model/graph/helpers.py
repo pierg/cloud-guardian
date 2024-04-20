@@ -1,7 +1,7 @@
 # TODO: improve to extract more information from the ARN
-def extract_policy_from_ARN(arn: str) -> str:
+def extract_identifier_from_ARN(arn: str) -> str:
     """
-    Extracts the policy part from the ARN format 'arn:aws:iam::aws:policy/{{policy}}'.
+    Extracts the 'identifier' from the ARN format 'arn:aws:iam::aws:{{ressource, policy}}/{{identifier}}'.
     """
     policy = arn.split("/")[-1]
     return policy

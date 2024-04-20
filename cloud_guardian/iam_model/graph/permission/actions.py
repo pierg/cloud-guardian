@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from cloud_guardian.iam_model.graph.exceptions import ActionNotSupported
 from cloud_guardian.iam_model.graph.helpers import (
-    extract_policy_from_ARN,
+    extract_identifier_from_ARN,
 )
 import re
 
@@ -161,7 +161,7 @@ class ActionFactory:
 
     @classmethod
     def get_or_create(cls, aws_action: str) -> SupportedAction:
-        aws_action = extract_policy_from_ARN(aws_action)
+        aws_action = extract_identifier_from_ARN(aws_action)
         if aws_action not in cls._instances:
             # TODO: should be refactor to properly support wildcards
             # and the different IAM policy formats

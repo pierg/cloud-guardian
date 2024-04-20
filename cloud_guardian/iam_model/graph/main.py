@@ -3,7 +3,7 @@ from typing import Union, List
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.helpers import (
-    extract_policy_from_ARN,
+    extract_identifier_from_ARN,
 )
 from cloud_guardian.iam_model.graph.identities import user
 from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
@@ -108,11 +108,11 @@ for role_data in data["roles.json"]["Roles"]:
         if statement["Effect"] != "Allow":
             continue
 
-        # TODO: implement a mechanism to ensure that the list of users is complete
-        try:
-            user = UserFactory._instances[statement["Principal"]["AWS"]]
-        except KeyError as e:
-            logger.error(f"user does not exist {e}")
+        user = UserFactory.get_or_create(
+            user_name=extract_identifier_from_ARN(statement["Principal"]["AWS"]),
+            arn=statement["Principal"]["AWS"],
+            create_date=None,  # FIXME: cannot infer user creation date from roles.json
+        )
 
         graph.add_relationship(CanAssumeRole(user, role))
         logger.info(
@@ -121,15 +121,14 @@ for role_data in data["roles.json"]["Roles"]:
 
 # Users permissions
 for user_data in data["users.json"]["Users"]:
-    # TODO: implement a mechanism to ensure that the list of users is complete
-    try:
-        user = UserFactory._instances[user_data["Arn"]]
-    except KeyError as e:
-        logger.error(f"user does not exist {e}")
-
+    user = UserFactory.get_or_create(
+        user_name=user_data["UserName"],
+        arn=user_data["Arn"],
+        create_date=user_data["CreateDate"],
+    )
     for policy_data in user_data["AttachedPolicies"]:
         arn = policy_data["PolicyArn"]
-        policy = extract_policy_from_ARN(arn)
+        policy = extract_identifier_from_ARN(arn)
 
         permission = PermissionFactory.get_or_create(
             action=ActionFactory.get_or_create(arn),
