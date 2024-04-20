@@ -61,6 +61,16 @@ class GetObject(SupportedAction):
 
 
 @dataclass(frozen=True)
+class DevS3Access(SupportedAction):
+    id: str = "DevS3Access"
+    category: str = "DataManagement"
+    description: str = (
+        "Allows accessing an object from S3 in a development environment."
+    )
+    aws_action: str = "s3:DevS3Access"
+
+
+@dataclass(frozen=True)
 class PutObject(SupportedAction):
     id: str = "PutObject"
     category: str = "DataManagement"
@@ -127,20 +137,37 @@ class ActionFactory:
         DeleteUser.aws_action: DeleteUser,
         GetObject.aws_action: GetObject,
         PutObject.aws_action: PutObject,
-        ReadOnly.aws_action: ReadOnly,
-        Admin.aws_action: Admin,
         Any.aws_action: Any,
         AssumeRole.aws_action: AssumeRole,
+        # TODO: should all actions be defined and listed
+        # in the code?
+        DevS3Access.aws_action: DevS3Access,
+        ReadOnly.aws_action: ReadOnly,
+        Admin.aws_action: Admin,
     }
 
+    def get_action(cls, aws_action: str) -> SupportedAction:
+        if aws_action in cls._action_types:
+            return cls._action_types[aws_action]
+        else:
+            # TODO: improve the implementation to make it
+            # more robust (the idea is to identify the relevant
+            # action when the `_action_types` object does not
+            # strictly contains the aws_action name)
+            for k, v in cls._action_types.items():
+                if re.search(aws_action, k, re.IGNORECASE):
+                    return v
+
+        raise ActionNotSupported(aws_action)
+
     @classmethod
-    def get_or_create(cls, aws_action: str):
+    def get_or_create(cls, aws_action: str) -> SupportedAction:
         aws_action = extract_policy_from_ARN(aws_action)
         if aws_action not in cls._instances:
             # TODO: should be refactor to properly support wildcards
             # and the different IAM policy formats
             if is_supported_action(aws_action, cls._action_types):
-                action_class = cls._action_types[aws_action]
+                action_class = cls.get_action(cls, aws_action)
                 cls._instances[aws_action] = action_class()
             else:
                 raise ActionNotSupported(aws_action)

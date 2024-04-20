@@ -1,9 +1,9 @@
 import json
-from typing import Union
+from typing import Union, List
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.helpers import (
-    extract_policy_from_arn,
+    extract_policy_from_ARN,
 )
 from cloud_guardian.iam_model.graph.identities import user
 from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
@@ -17,7 +17,11 @@ from cloud_guardian.iam_model.graph.identities.services import (
     SupportedService,
 )
 from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
-from cloud_guardian.iam_model.graph.permission.permission import PermissionFactory
+from cloud_guardian.iam_model.graph.permission.permission import (
+    PermissionFactory,
+    Permission,
+)
+
 from cloud_guardian.iam_model.graph.relationships.relationships import (
     IsPartOf,
     CanAssumeRole,
@@ -28,6 +32,7 @@ from cloud_guardian.iam_model.graph.permission.actions import (
 )
 from cloud_guardian.utils.shared import aws_example_folder
 from cloud_guardian.iam_model.graph.permission.effects import Effect
+
 
 from loguru import logger
 
@@ -104,9 +109,12 @@ for role_data in data["roles.json"]["Roles"]:
         try:
             user = UserFactory._instances[statement["Principal"]["AWS"]]
         except KeyError as e:
-            logger.error(e)
+            logger.error(f"user does not exist {e}")
 
         graph.add_relationship(CanAssumeRole(user, role))
+        logger.info(
+            f"added relationship between {user.user_name} and role {role.role_name}: can assume role"
+        )
 
 # Users permissions
 for user_data in data["users.json"]["Users"]:
@@ -114,11 +122,11 @@ for user_data in data["users.json"]["Users"]:
     try:
         user = UserFactory._instances[user_data["Arn"]]
     except KeyError as e:
-        logger.error(e)
+        logger.error(f"user does not exist {e}")
 
     for policy_data in user_data["AttachedPolicies"]:
         arn = policy_data["PolicyArn"]
-        policy = extract_policy_from_arn(arn)
+        policy = extract_policy_from_ARN(arn)
 
         permission = PermissionFactory.get_or_create(
             action=ActionFactory.get_or_create(arn),
@@ -128,14 +136,43 @@ for user_data in data["users.json"]["Users"]:
             conditions=[],
         )
 
-        # TODO: how do we define the target here? (I am temporarily using `None``)
+        # TODO: how do we define the target here? (I am temporarily using `None`)
         graph.add_relationship(HasPermission(user, target=None, permission=permission))
+        logger.info(
+            f"added relationship between {user.user_name} and {None}: {permission.action} [{permission.effect}]"
+        )
 
+# Groups
+for group_data in data["groups.json"]["Groups"]:
+    permissions: List[Permission] = []
+    users_belonging_to_group: List[User] = []
 
-# users.json and groups.jsons contain keys for the policy attached to them, so it means that they have all the permissions related to those policy keys, n.b. identity based polices also contain resources as "arn:aws:s3:::example-bucket/*", so that could match multiple resource in the graph.
-# So we can have user -> haspermission (permsision_x) -> resource_1
-#                user -> haspermission (permsision_x) -> resource_2 etc..
-# Check the google doc for more details
+    for group_policy in group_data["AttachedPolicies"]:
+        permission = PermissionFactory.get_or_create(
+            action=ActionFactory.get_or_create(group_policy["PolicyArn"]),
+            effect=Effect(
+                Effect.ALLOW
+            ),  # TODO: do we assume all permissions ALLOW by default?
+            conditions=[],
+        )
+        permissions.append(permission)
+
+    for user_data in group_data["Users"]:
+        users_belonging_to_group.append(
+            UserFactory._instances[user_data["UserArn"]],
+        )
+
+    # add the relationship for each user being part of the group
+    for user in users_belonging_to_group:
+        for permission in permissions:
+            # TODO: how do we define the target here? (I am temporarily using `None`)
+            graph.add_relationship(
+                HasPermission(user, target=None, permission=permission)
+            )
+            logger.info(
+                f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {None}: {permission.action} [{permission.effect}]"
+            )
+
 
 # Permissions can be instantiated and retried from the "Statement" filed in the jsons, e.g. :
 # I'm not sure if to instantiate them first like with identities, or as we parse relationships, ultimately is the same as they are singletons
