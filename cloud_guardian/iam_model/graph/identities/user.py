@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Optional
 
 
 @dataclass
@@ -8,6 +8,18 @@ class User:
     user_name: str
     arn: str
     create_date: datetime
+
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return False
+        return (self.user_name, self.arn, self.create_date) == (
+            other.user_name,
+            other.arn,
+            other.create_date,
+        )
+
+    def __hash__(self):
+        return hash((self.user_name, self.arn, self.create_date))
 
     def __str__(self):
         return (
@@ -39,6 +51,12 @@ class UserFactory:
             arn=user_dict["Arn"],
             create_date=datetime.fromisoformat(user_dict["CreateDate"]),
         )
+
+    def get_user(self, user_name: str) -> Optional[User]:
+        if user_name in self._instances:
+            return self._instances[user_name]
+        else:
+            return KeyError(f"User '{user_name}' not found.")
 
 
 # json_data = {

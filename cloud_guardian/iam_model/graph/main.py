@@ -15,8 +15,13 @@ from cloud_guardian.iam_model.graph.identities.services import (
 )
 from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
 from cloud_guardian.iam_model.graph.permission.permission import PermissionFactory
-from cloud_guardian.iam_model.graph.relationships.relationships import IsPartOf
+from cloud_guardian.iam_model.graph.relationships.relationships import (
+    IsPartOf,
+    CanAssumeRole,
+)
 from cloud_guardian.utils.shared import aws_example_folder
+
+from loguru import logger
 
 data_folder = aws_example_folder
 
@@ -75,13 +80,25 @@ for group_data in data["groups.json"]["Groups"]:
     group = GroupFactory.from_dict(group_data)
     for user_data in group_data["Users"]:
         user = UserFactory._instances[user_data["UserArn"]]
-        is_part_of_relationship = IsPartOf(user, group)
-        graph.add_relationship(is_part_of_relationship)
+        graph.add_relationship(IsPartOf(user, group))
 
 
 # TODO: Parse the rest of the relationships (see relationships.py)
 
-# roles.json contain all you need to make the "CanAssumeRole" relationships
+# Can Assume Role relationships
+for role_data in data["roles.json"]["Roles"]:
+    role = RoleFactory.from_dict(role_data)
+    for statement in role_data["AssumeRolePolicyDocument"]["Statement"]:
+        if statement["Effect"] != "Allow":
+            continue
+
+        # TODO: implement a mechanism to ensure that the list of users is complete
+        try:
+            user = UserFactory._instances[statement["Principal"]["AWS"]]
+        except KeyError as e:
+            logger.error(e)
+
+        graph.add_relationship(CanAssumeRole(user, role))
 
 # users.json and groups.jsons contain keys for the policy attached to them, so it means that they have all the permissions related to those policy keys, n.b. identity based polices also contain resources as "arn:aws:s3:::example-bucket/*", so that could match multiple resource in the graph.
 # So we can have user -> haspermission (permsision_x) -> resource_1
