@@ -26,6 +26,7 @@ from cloud_guardian.iam_model.graph.relationships.relationships import (
     IsPartOf,
     CanAssumeRole,
     HasPermission,
+    HasPermissionToResource,
 )
 from cloud_guardian.iam_model.graph.permission.actions import (
     ActionFactory,
@@ -169,12 +170,27 @@ for user_data in data["users.json"]["Users"]:
             conditions=[],
         )
 
-        for target in arn_to_resources.get(policy_arn, []):
+        # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
+        # `HasPermissionToResource` (relationship between two nodes)
+        # The current implementation is not optimal as the absence of target could be the
+        # result of a misconfiguration
+        targets = arn_to_resources.get(policy_arn, [])
+        if len(targets) > 0:
+            for target in targets:
+                graph.add_relationship(
+                    HasPermissionToResource(
+                        source=user, target=target, permission=permission
+                    )
+                )
+                logger.info(
+                    f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
+                )
+        else:
             graph.add_relationship(
-                HasPermission(user, target=target, permission=permission)
+                HasPermission(source=user, target=None, permission=permission)
             )
             logger.info(
-                f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
+                f"added permission to {user.user_name}: {permission.action} [{permission.effect}]"
             )
 
 # Groups
@@ -201,12 +217,27 @@ for group_data in data["groups.json"]["Groups"]:
     # add the relationship for each user being part of the group (per permission)
     for user in users_belonging_to_group:
         for permission in permissions:
-            for target in arn_to_resources.get(policy_arn, []):
+            # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
+            # `HasPermissionToResource` (relationship between two nodes)
+            # The current implementation is not optimal as the absence of target could be the
+            # result of a misconfiguration
+            targets = arn_to_resources.get(policy_arn, [])
+            if len(targets) > 0:
+                for target in targets:
+                    graph.add_relationship(
+                        HasPermissionToResource(
+                            source=user, target=target, permission=permission
+                        )
+                    )
+                    logger.info(
+                        f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {target.resource_name}: {permission.action} [{permission.effect}]"
+                    )
+            else:
                 graph.add_relationship(
-                    HasPermission(user, target=target, permission=permission)
+                    HasPermission(source=user, target=None, permission=permission)
                 )
                 logger.info(
-                    f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {target.resource_name}: {permission.action} [{permission.effect}]"
+                    f"added permission to {user.user_name} (as part of group {group_data['GroupName']}): {permission.action} [{permission.effect}]"
                 )
 
 
