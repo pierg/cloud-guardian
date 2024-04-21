@@ -119,37 +119,34 @@ for role_data in data["roles.json"]["Roles"]:
             f"added relationship between {user.user_name} and role {role.role_name}: can assume role"
         )
 
-# mapping between permissions (ARN) and targets
-# TODO: process resources_policies.json
-permissions_to_targets: Dict[str, Set[Resource]] = {}
+# Mapping between ARNs and resources
+arn_to_resource: Dict[str, Set[Resource]] = {}
+for policy in data["resources_policies.json"]["ResourceBasedPolicies"]:
+    resource_arn = policy["ResourceArn"]
+
+    arn_to_resource[resource_arn] = ResourceFactory.get_or_create(
+        resource_name=policy["ResourceName"],
+        resource_arn=resource_arn,
+        resource_type=policy["ResourceType"],
+        service=policy["Service"],
+    )
+
+# Mapping between ARNs and targets
+arn_to_resources: Dict[str, Set[Resource]] = {}
 for policy in data["identities_policies.json"]["IdentityBasedPolicies"]:
-    arn = policy["PolicyArn"]
+    policy_arn = policy["PolicyArn"]
 
     for statement in policy["PolicyDocument"]["Statement"]:
         target_resource = statement["Resource"]
 
         if target_resource == "*":
-            for resource in ResourceFactory._instances:
-                permissions_to_targets.setdefault(arn, set()).add(
-                    ResourceFactory.get_or_create(
-                        resource_name=extract_identifier_from_ARN(
-                            resource
-                        ),  # TODO: refactor to extract it from resources_policies.json
-                        resource_arn=resource,
-                        service=None,  # TODO: refactor to extract it from resources_policies.json
-                        resource_type=None,  # TODO: refactor to extract it from resources_policies.json
-                    )
+            for resource_arn in ResourceFactory._instances:
+                arn_to_resources.setdefault(policy_arn, set()).add(
+                    arn_to_resource[resource_arn]
                 )
         else:
-            permissions_to_targets.setdefault(arn, set()).add(
-                ResourceFactory.get_or_create(
-                    resource_name=extract_identifier_from_ARN(
-                        target_resource
-                    ),  # TODO: refactor to extract it from resources_policies.json
-                    resource_arn=target_resource,
-                    service=None,  # TODO: refactor to extract it from resources_policies.json
-                    resource_type=None,  # TODO: refactor to extract it from resources_policies.json)
-                )
+            arn_to_resources.setdefault(policy_arn, set()).add(
+                arn_to_resource[resource_arn]
             )
 
 
@@ -161,18 +158,18 @@ for user_data in data["users.json"]["Users"]:
         create_date=user_data["CreateDate"],
     )
     for policy_data in user_data["AttachedPolicies"]:
-        arn = policy_data["PolicyArn"]
-        policy = extract_identifier_from_ARN(arn)
+        policy_arn = policy_data["PolicyArn"]
+        policy = extract_identifier_from_ARN(policy_arn)
 
         permission = PermissionFactory.get_or_create(
-            action=ActionFactory.get_or_create(arn),
+            action=ActionFactory.get_or_create(policy_arn),
             effect=Effect(
                 Effect.ALLOW
             ),  # NOTE: do we assume all permissions ALLOW by default?
             conditions=[],
         )
 
-        for target in permissions_to_targets.get(arn, []):
+        for target in arn_to_resources.get(policy_arn, []):
             graph.add_relationship(
                 HasPermission(user, target=target, permission=permission)
             )
@@ -186,9 +183,9 @@ for group_data in data["groups.json"]["Groups"]:
     users_belonging_to_group: List[User] = []
 
     for group_policy in group_data["AttachedPolicies"]:
-        arn = group_policy["PolicyArn"]
+        policy_arn = group_policy["PolicyArn"]
         permission = PermissionFactory.get_or_create(
-            action=ActionFactory.get_or_create(arn),
+            action=ActionFactory.get_or_create(policy_arn),
             effect=Effect(
                 Effect.ALLOW
             ),  # NOTE: do we assume all permissions ALLOW by default?
@@ -204,7 +201,7 @@ for group_data in data["groups.json"]["Groups"]:
     # add the relationship for each user being part of the group (per permission)
     for user in users_belonging_to_group:
         for permission in permissions:
-            for target in permissions_to_targets.get(arn, []):
+            for target in arn_to_resources.get(policy_arn, []):
                 graph.add_relationship(
                     HasPermission(user, target=target, permission=permission)
                 )
