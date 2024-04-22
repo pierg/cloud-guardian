@@ -1,10 +1,8 @@
+import re
 from dataclasses import dataclass
 
 from cloud_guardian.iam_model.graph.exceptions import ActionNotSupported
-from cloud_guardian.iam_model.graph.helpers import (
-    extract_identifier_from_ARN,
-)
-import re
+from cloud_guardian.iam_model.graph.helpers import extract_identifier_from_ARN
 
 
 @dataclass(frozen=True)

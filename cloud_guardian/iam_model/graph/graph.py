@@ -3,13 +3,9 @@ from typing import Union
 
 import networkx as nx
 from cloud_guardian.iam_model.graph.identities.group import Group
-from cloud_guardian.iam_model.graph.identities.resources import (
-    Resource,
-)
+from cloud_guardian.iam_model.graph.identities.resources import Resource
 from cloud_guardian.iam_model.graph.identities.role import Role
-from cloud_guardian.iam_model.graph.identities.services import (
-    SupportedService,
-)
+from cloud_guardian.iam_model.graph.identities.services import SupportedService
 from cloud_guardian.iam_model.graph.identities.user import User
 from cloud_guardian.iam_model.graph.relationships.relationships import Relationship
 from loguru import logger
