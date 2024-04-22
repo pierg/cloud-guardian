@@ -1,10 +1,8 @@
 import json
-from typing import Union, List, Dict, Set
+from typing import Dict, List, Set, Union
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.helpers import (
-    extract_identifier_from_ARN,
-)
+from cloud_guardian.iam_model.graph.helpers import extract_identifier_from_ARN
 from cloud_guardian.iam_model.graph.identities import user
 from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
 from cloud_guardian.iam_model.graph.identities.resources import (
@@ -17,24 +15,19 @@ from cloud_guardian.iam_model.graph.identities.services import (
     SupportedService,
 )
 from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
+from cloud_guardian.iam_model.graph.permission.actions import ActionFactory
+from cloud_guardian.iam_model.graph.permission.effects import Effect
 from cloud_guardian.iam_model.graph.permission.permission import (
-    PermissionFactory,
     Permission,
+    PermissionFactory,
 )
-
 from cloud_guardian.iam_model.graph.relationships.relationships import (
-    IsPartOf,
     CanAssumeRole,
     HasPermission,
     HasPermissionToResource,
-)
-from cloud_guardian.iam_model.graph.permission.actions import (
-    ActionFactory,
+    IsPartOf,
 )
 from cloud_guardian.utils.shared import aws_example_folder
-from cloud_guardian.iam_model.graph.permission.effects import Effect
-
-
 from loguru import logger
 
 data_folder = aws_example_folder
@@ -121,33 +114,83 @@ for role_data in data["roles.json"]["Roles"]:
         )
 
 # Mapping between ARNs and resources
-arn_to_resource: Dict[str, Set[Resource]] = {}
+arn_to_resources: Dict[str, Set[Resource]] = {}
 for policy in data["resources_policies.json"]["ResourceBasedPolicies"]:
     resource_arn = policy["ResourceArn"]
 
-    arn_to_resource[resource_arn] = ResourceFactory.get_or_create(
+    arn_to_resources[resource_arn] = ResourceFactory.get_or_create(
         resource_name=policy["ResourceName"],
         resource_arn=resource_arn,
         resource_type=policy["ResourceType"],
         service=policy["Service"],
     )
 
-# Mapping between ARNs and targets
-arn_to_resources: Dict[str, Set[Resource]] = {}
+# Mapping between ARNs and targets and policies
+arn_to_targets: Dict[str, Set[Resource]] = {}
+
+# FIXME: transform list of permissions to a set of permissions
+# (will require to make Permission hashable)
+arn_to_policies: Dict[str, List[Permission]] = {}
+
 for policy in data["identities_policies.json"]["IdentityBasedPolicies"]:
     policy_arn = policy["PolicyArn"]
 
     for statement in policy["PolicyDocument"]["Statement"]:
         target_resource = statement["Resource"]
 
+        # targets
         if target_resource == "*":
             for resource_arn in ResourceFactory._instances:
-                arn_to_resources.setdefault(policy_arn, set()).add(
-                    arn_to_resource[resource_arn]
+                arn_to_targets.setdefault(policy_arn, set()).add(
+                    arn_to_resources[resource_arn]
                 )
         else:
-            arn_to_resources.setdefault(policy_arn, set()).add(
-                arn_to_resource[resource_arn]
+            arn_to_targets.setdefault(policy_arn, set()).add(
+                arn_to_resources[resource_arn]
+            )
+
+        # policies
+        for action in statement["Action"]:
+            arn_to_policies.setdefault(policy_arn, []).append(
+                PermissionFactory.get_or_create(
+                    action=ActionFactory.get_or_create(action),
+                    effect=(
+                        Effect.ALLOW if statement["Effect"] == "Allow" else Effect.DENY
+                    ),
+                    conditions=(
+                        statement["Condition"] if "Condition" in statement else []
+                    ),
+                )
+            )
+
+
+def add_permissions(user: User, policy_arn: str, permissions: List[Permission]):
+    # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
+    # `HasPermissionToResource` (relationship between two nodes)
+    # The current implementation is not optimal as the absence of target could be the
+    # result of a misconfiguration
+
+    targets = arn_to_targets.get(policy_arn, [])
+
+    if len(targets) > 0:
+        for target in targets:
+            for permission in permissions:
+                graph.add_relationship(
+                    HasPermissionToResource(
+                        source=user, target=target, permission=permission
+                    )
+                )
+
+                logger.info(
+                    f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
+                )
+    else:
+        for permission in permissions:
+            graph.add_relationship(
+                HasPermission(source=user, target=None, permission=permission)
+            )
+            logger.info(
+                f"added permission to {user.user_name}: {permission.action} [{permission.effect}]"
             )
 
 
@@ -158,56 +201,24 @@ for user_data in data["users.json"]["Users"]:
         arn=user_data["Arn"],
         create_date=user_data["CreateDate"],
     )
+
     for policy_data in user_data["AttachedPolicies"]:
         policy_arn = policy_data["PolicyArn"]
-        policy = extract_identifier_from_ARN(policy_arn)
-
-        permission = PermissionFactory.get_or_create(
-            action=ActionFactory.get_or_create(policy_arn),
-            effect=Effect(
-                Effect.ALLOW
-            ),  # NOTE: do we assume all permissions ALLOW by default?
-            conditions=[],
+        permissions = (
+            arn_to_policies[policy_arn] if policy_arn in arn_to_policies else []
         )
-
-        # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
-        # `HasPermissionToResource` (relationship between two nodes)
-        # The current implementation is not optimal as the absence of target could be the
-        # result of a misconfiguration
-        targets = arn_to_resources.get(policy_arn, [])
-        if len(targets) > 0:
-            for target in targets:
-                graph.add_relationship(
-                    HasPermissionToResource(
-                        source=user, target=target, permission=permission
-                    )
-                )
-                logger.info(
-                    f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
-                )
-        else:
-            graph.add_relationship(
-                HasPermission(source=user, target=None, permission=permission)
-            )
-            logger.info(
-                f"added permission to {user.user_name}: {permission.action} [{permission.effect}]"
-            )
+        add_permissions(user, policy_arn, permissions)
 
 # Groups
 for group_data in data["groups.json"]["Groups"]:
-    permissions: List[Permission] = []
+    group_permissions: List[Permission] = []
     users_belonging_to_group: List[User] = []
 
     for group_policy in group_data["AttachedPolicies"]:
         policy_arn = group_policy["PolicyArn"]
-        permission = PermissionFactory.get_or_create(
-            action=ActionFactory.get_or_create(policy_arn),
-            effect=Effect(
-                Effect.ALLOW
-            ),  # NOTE: do we assume all permissions ALLOW by default?
-            conditions=[],
+        group_permissions.extend(
+            arn_to_policies[policy_arn] if policy_arn in arn_to_policies else []
         )
-        permissions.append(permission)
 
     for user_data in group_data["Users"]:
         users_belonging_to_group.append(
@@ -216,29 +227,7 @@ for group_data in data["groups.json"]["Groups"]:
 
     # add the relationship for each user being part of the group (per permission)
     for user in users_belonging_to_group:
-        for permission in permissions:
-            # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
-            # `HasPermissionToResource` (relationship between two nodes)
-            # The current implementation is not optimal as the absence of target could be the
-            # result of a misconfiguration
-            targets = arn_to_resources.get(policy_arn, [])
-            if len(targets) > 0:
-                for target in targets:
-                    graph.add_relationship(
-                        HasPermissionToResource(
-                            source=user, target=target, permission=permission
-                        )
-                    )
-                    logger.info(
-                        f"added relationship between {user.user_name} (as part of group {group_data['GroupName']}) and {target.resource_name}: {permission.action} [{permission.effect}]"
-                    )
-            else:
-                graph.add_relationship(
-                    HasPermission(source=user, target=None, permission=permission)
-                )
-                logger.info(
-                    f"added permission to {user.user_name} (as part of group {group_data['GroupName']}): {permission.action} [{permission.effect}]"
-                )
+        add_permissions(user, policy_arn, group_permissions)
 
 
 # Permissions can be instantiated and retried from the "Statement" filed in the jsons, e.g. :

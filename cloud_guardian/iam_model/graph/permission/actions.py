@@ -90,7 +90,9 @@ class CopyObject(SupportedAction):
 class DeleteObject(SupportedAction):
     id: str = "DeleteObject"
     category: str = "DataManagement"
-    description: str = "Allows deleting an object in S3. Used together with CopyObject to simulate moving an object."
+    description: str = (
+        "Allows deleting an object in S3. Used together with CopyObject to simulate moving an object."
+    )
     aws_action: str = "s3:DeleteObject"
 
 
@@ -120,11 +122,10 @@ class DeleteUser(SupportedAction):
     aws_action: str = "iam:DeleteUser"
 
 
-def is_supported_action(action, actions_types):
-    for action_type in actions_types:
-        if re.search(action, action_type, re.IGNORECASE):
-            return True
-    return False
+def is_supported_action(action, action_types):
+    return action == "*" or any(
+        re.search(action, action_type, re.IGNORECASE) for action_type in action_types
+    )
 
 
 class ActionFactory:
