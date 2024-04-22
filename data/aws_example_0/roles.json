@@ -2,8 +2,7 @@
   "Roles": [
     {
       "RoleName": "EC2Role",
-      "RoleId": "ROLEECS2ID",
-      "Arn": "arn:aws:iam::123456789012:role/EC2Role",
+      "RoleArn": "arn:aws:iam::123456789012:role/EC2Role",
       "CreateDate": "2020-01-03T12:00:00Z",
       "AssumeRolePolicyDocument": {
         "Version": "2012-10-17",
@@ -21,8 +20,7 @@
     },
     {
       "RoleName": "LambdaExecutionRole",
-      "RoleId": "ROLELAMBDAID",
-      "Arn": "arn:aws:iam::123456789012:role/LambdaExecutionRole",
+      "RoleArn": "arn:aws:iam::123456789012:role/LambdaExecutionRole",
       "CreateDate": "2020-02-03T12:00:00Z",
       "AssumeRolePolicyDocument": {
         "Version": "2012-10-17",
