@@ -2,7 +2,7 @@
   "Groups": [
     {
       "GroupName": "Developers",
-      "Arn": "arn:aws:iam::123456789012:group/Developers",
+      "GroupArn": "arn:aws:iam::123456789012:group/Developers",
       "CreateDate": "2020-01-02T12:00:00Z",
       "Users": [
         {
@@ -23,7 +23,7 @@
     },
     {
       "GroupName": "Admins",
-      "Arn": "arn:aws:iam::123456789012:group/Admins",
+      "GroupArn": "arn:aws:iam::123456789012:group/Admins",
       "CreateDate": "2020-03-01T12:00:00Z",
       "Users": [
         {

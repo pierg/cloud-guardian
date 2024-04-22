@@ -1,27 +1,32 @@
 {
-    "Users": [
-      {
-        "UserName": "Alice",
-        "Arn": "arn:aws:iam::123456789012:user/Alice",
-        "CreateDate": "2020-01-01T12:00:00Z",
-        "AttachedPolicies": [
-          {
-            "PolicyName": "AdminAccess",
-            "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
-          }
-        ]
-      },
-      {
-        "UserName": "Bob",
-        "Arn": "arn:aws:iam::123456789012:user/Bob",
-        "CreateDate": "2020-01-15T12:00:00Z",
-        "AttachedPolicies": [
-          {
-            "PolicyName": "ReadOnlyAccess",
-            "PolicyArn": "arn:aws:iam::aws:policy/ReadOnlyAccess"
-          }
-        ]
-      }
-    ]
-  }
-  
+  "Users": [
+    {
+      "UserName": "Alice",
+      "UserArn": "arn:aws:iam::123456789012:user/Alice",
+      "CreateDate": "2020-01-01T12:00:00Z",
+      "AttachedPolicies": [
+        {
+          "PolicyName": "AdminAccess",
+          "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
+        }
+      ]
+    },
+    {
+      "UserName": "Bob",
+      "UserArn": "arn:aws:iam::123456789012:user/Bob",
+      "CreateDate": "2020-01-15T12:00:00Z",
+      "AttachedPolicies": [
+        {
+          "PolicyName": "ReadOnlyAccess",
+          "PolicyArn": "arn:aws:iam::aws:policy/ReadOnlyAccess"
+        }
+      ]
+    },
+    {
+      "UserName": "Root",
+      "UserArn": "arn:aws:iam::123456789012:root",
+      "CreateDate": "2020-01-15T12:00:00Z",
+      "AttachedPolicies": []
+    }
+  ]
+}
