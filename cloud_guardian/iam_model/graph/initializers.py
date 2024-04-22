@@ -1,4 +1,3 @@
-
 from cloud_guardian.iam_model.graph.identities.group import GroupFactory
 from cloud_guardian.iam_model.graph.identities.resources import ResourceFactory
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory

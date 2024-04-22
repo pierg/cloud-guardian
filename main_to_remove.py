@@ -21,13 +21,14 @@ from cloud_guardian.iam_model.graph.permission.permission import (
     Permission,
     PermissionFactory,
 )
+from cloud_guardian.iam_model.graph.plotting import save_graph_pdf
 from cloud_guardian.iam_model.graph.relationships.relationships import (
     CanAssumeRole,
     HasPermission,
     HasPermissionToResource,
     IsPartOf,
 )
-from cloud_guardian.utils.shared import aws_example_folder
+from cloud_guardian.utils.shared import aws_example_folder, output_path
 from loguru import logger
 
 data_folder = aws_example_folder
@@ -103,24 +104,21 @@ for role_data in data["roles.json"]["Roles"]:
             continue
 
         user = UserFactory.get_or_create(
-            user_name=extract_identifier_from_ARN(statement["Principal"]["AWS"]),
+            name=extract_identifier_from_ARN(statement["Principal"]["AWS"]),
             arn=statement["Principal"]["AWS"],
             create_date=None,  # FIXME: cannot infer user creation date from roles.json
         )
 
         graph.add_relationship(CanAssumeRole(user, role))
-        logger.info(
-            f"added relationship between {user.user_name} and role {role.role_name}: can assume role"
-        )
 
 # Mapping between ARNs and resources
 arn_to_resources: Dict[str, Set[Resource]] = {}
 for policy in data["resources_policies.json"]["ResourceBasedPolicies"]:
-    resource_arn = policy["ResourceArn"]
+    arn = policy["ResourceArn"]
 
-    arn_to_resources[resource_arn] = ResourceFactory.get_or_create(
-        resource_name=policy["ResourceName"],
-        resource_arn=resource_arn,
+    arn_to_resources[arn] = ResourceFactory.get_or_create(
+        name=policy["ResourceName"],
+        arn=arn,
         resource_type=policy["ResourceType"],
         service=policy["Service"],
     )
@@ -140,14 +138,10 @@ for policy in data["identities_policies.json"]["IdentityBasedPolicies"]:
 
         # targets
         if target_resource == "*":
-            for resource_arn in ResourceFactory._instances:
-                arn_to_targets.setdefault(policy_arn, set()).add(
-                    arn_to_resources[resource_arn]
-                )
+            for arn in ResourceFactory._instances:
+                arn_to_targets.setdefault(policy_arn, set()).add(arn_to_resources[arn])
         else:
-            arn_to_targets.setdefault(policy_arn, set()).add(
-                arn_to_resources[resource_arn]
-            )
+            arn_to_targets.setdefault(policy_arn, set()).add(arn_to_resources[arn])
 
         # policies
         for action in statement["Action"]:
@@ -181,24 +175,18 @@ def add_permissions(user: User, policy_arn: str, permissions: List[Permission]):
                     )
                 )
 
-                logger.info(
-                    f"added relationship between {user.user_name} and {target.resource_name}: {permission.action} [{permission.effect}]"
-                )
     else:
         for permission in permissions:
             graph.add_relationship(
                 HasPermission(source=user, target=None, permission=permission)
-            )
-            logger.info(
-                f"added permission to {user.user_name}: {permission.action} [{permission.effect}]"
             )
 
 
 # Users permissions
 for user_data in data["users.json"]["Users"]:
     user = UserFactory.get_or_create(
-        user_name=user_data["UserName"],
-        arn=user_data["Arn"],
+        name=user_data["UserName"],
+        arn=user_data["UserArn"],
         create_date=user_data["CreateDate"],
     )
 
@@ -229,26 +217,5 @@ for group_data in data["groups.json"]["Groups"]:
     for user in users_belonging_to_group:
         add_permissions(user, policy_arn, group_permissions)
 
-
-# Permissions can be instantiated and retried from the "Statement" filed in the jsons, e.g. :
-# I'm not sure if to instantiate them first like with identities, or as we parse relationships, ultimately is the same as they are singletons
-
-permission_data = {
-    "Effect": "Allow",
-    "Action": ["sts:AssumeRole", "s3:CopyObject"],
-    "Principal": {
-        "AWS": [
-            "arn:aws:iam::123456789012:user/Alice",
-            "arn:aws:iam::123456789012:user/Bob",
-        ]
-    },
-    "Condition": {
-        "DateGreaterThan": {"aws:CurrentTime": "2023-01-01T00:00:00Z"},
-        "IpAddress": {"aws:SourceIp": "203.0.113.0/24"},
-    },
-    "Resource": "arn:aws:s3:::example-bucket/*",
-}
-
-permissions = PermissionFactory.from_dict(permission_data)
-for perm in permissions:
-    print(perm)
+    print(graph.summary())
+    save_graph_pdf(graph, output_path / "iam_graph.pdf")

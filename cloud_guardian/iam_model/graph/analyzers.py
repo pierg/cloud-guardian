@@ -7,20 +7,7 @@ from cloud_guardian.iam_model.graph.identities.user import UserFactory
 from cloud_guardian.iam_model.graph.relationships.relationships import (
     CanAssumeRole,
     IsPartOf,
-    HasPermissionToResource,
-    HasPermission
 )
-from cloud_guardian.iam_model.graph.permission.permission import PermissionFactory
-
-
-
-from typing import Dict, List, Set
-from cloud_guardian.iam_model.graph.identities.resources import ResourceFactory
-from cloud_guardian.iam_model.graph.identities.user import UserFactory
-from cloud_guardian.iam_model.graph.permission.permission import Permission, PermissionFactory
-from cloud_guardian.iam_model.graph.relationships.relationships import HasPermission, HasPermissionToResource
-from loguru import logger
-
 
 
 def connect_graph(graph: IAMGraph, data: dict):
@@ -49,13 +36,11 @@ def connect_graph(graph: IAMGraph, data: dict):
                 principal = statement.get("Principal", {})
                 if "AWS" in principal:
                     user = UserFactory.get_or_create(
-                        user_name=extract_identifier_from_ARN(principal["AWS"]),
+                        name=extract_identifier_from_ARN(principal["AWS"]),
                         arn=principal["AWS"],
                         create_date=None,
                     )
                     graph.add_relationship(CanAssumeRole(user, role))
 
-
     # TODO:
     # Connect "Has Permission To Resource" and "Has Permission" relationships
-   
