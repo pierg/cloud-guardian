@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# Bash script to rename 'main' branch to 'main_bak_{today_date}' and push current branch as new 'main'
+# Check for uncommitted changes
+if git diff-index --quiet HEAD --; then
+    echo "No uncommitted changes, proceeding..."
+else
+    echo "Please commit your changes or stash them before running this script."
+    exit 1
+fi
 
 # Set the date for the backup branch name
 TODAY_DATE=$(date +%Y-%m-%d)
@@ -14,7 +20,7 @@ git branch -m main "main_bak_${TODAY_DATE}"
 
 # Step 2: Update remote branches
 git push origin "main_bak_${TODAY_DATE}"
-git push origin --delete main
+git push origin --delete main || echo "Failed to delete 'main' remotely. Check branch protection settings."
 
 # Step 3: Push the current branch as the new 'main'
 git checkout $CURRENT_BRANCH
