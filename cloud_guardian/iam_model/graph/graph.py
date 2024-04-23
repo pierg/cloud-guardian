@@ -84,3 +84,13 @@ class IAMGraph:
                 if edge[2].get("type") in filter_types
             ]
         return list(self.graph.edges(data=True))
+    
+    def get_relationships(self, filter_types: list[str] = None):
+        """Get relationships from the graph."""
+        if filter_types:
+            return [
+                edge[2]["relationship"]
+                for edge in self.graph.edges(data=True)
+                if edge[2].get("type") in filter_types
+            ]
+        return [edge[2]["relationship"] for edge in self.graph.edges(data=True)]

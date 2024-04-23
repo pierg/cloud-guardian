@@ -10,7 +10,8 @@
             "Effect": "Allow",
             "Action": [
               "s3:GetObject",
-              "s3:List*"
+              "s3:List*",
+              "s3:Put*"
             ],
             "Resource": "*"
           }

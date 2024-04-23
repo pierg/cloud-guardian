@@ -1,6 +1,9 @@
+from math import log
 import sys
 from pathlib import Path
+import types
 
+from cloud_guardian.dynamic_model.actions import get_all_supported_actions
 from cloud_guardian.iam_model.graph.analyzers import connect_graph
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.initializers import initialize_factories
@@ -25,11 +28,18 @@ def run_analysis(data_folder: Path, output_file: Path):
 
         print(graph.summary())
 
+        # Get all supported actions for each relationship
+        supported_actions_ids = [action.aws_action_id for action in get_all_supported_actions()]
+        for relationship in graph.get_relationships(filter_types=["haspermission", "haspermissiontoresource"]):
+            supported_actions = relationship.permission.action.find_matching_actions(supported_actions_ids)
+            logger.info(f"Supported actions for node {relationship.source.name} having permissions {relationship.permission.action}: {supported_actions}")
+
         save_graph_pdf(graph, output_file)
 
     except Exception as e:
         logger.error(f"An error occurred during execution: {e}")
         raise
+
 
 
 def main():
