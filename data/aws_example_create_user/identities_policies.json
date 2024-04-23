@@ -1,0 +1,35 @@
+{
+  "IdentityBasedPolicies": [
+    {
+      "PolicyName": "CreateUserPolicy",
+      "PolicyArn": "arn:aws:iam::123456789012:policy/CreateUserPolicy",
+      "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "iam:CreateUser",
+              "iam:AttachUserPolicy"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "PolicyName": "AdminAccess",
+      "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess",
+      "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          }
+        ]
+      }
+    }
+  ]
+}
