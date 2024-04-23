@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from cloud_guardian.iam_model.graph.permission.actions import (
-    ActionFactory,
-    SupportedAction,
+    ActionsFactory,
+    SpecifiedActions,
 )
 from cloud_guardian.iam_model.graph.permission.conditions import (
     ConditionFactory,
@@ -16,7 +16,7 @@ from cloud_guardian.iam_model.graph.permission.effects import Effect
 @dataclass
 class Permission:
     id: str
-    action: SupportedAction
+    action: SpecifiedActions
     effect: Effect
     conditions: List[SupportedCondition]
 
@@ -28,7 +28,7 @@ class Permission:
     def from_dict(cls, permission_dict: Dict[str, Any]) -> List["Permission"]:
         effect = Effect(permission_dict["Effect"])
         actions = [
-            ActionFactory.get_or_create(action) for action in permission_dict["Action"]
+            ActionsFactory.get_or_create(action) for action in permission_dict["Action"]
         ]
         conditions = []
         if "Condition" in permission_dict:
@@ -54,7 +54,7 @@ class PermissionFactory:
     @classmethod
     def get_or_create(
         cls,
-        action: SupportedAction,
+        action: SpecifiedActions,
         effect: Effect,
         conditions: List[SupportedCondition],
     ) -> Permission:
@@ -71,10 +71,10 @@ class PermissionFactory:
     def from_dict(cls, permission_dict: Dict[str, Any]) -> List[Permission]:
         effect = Effect(permission_dict["Effect"])
         if isinstance(permission_dict["Action"], str):
-            actions = [ActionFactory.get_or_create(permission_dict["Action"])]
+            actions = [ActionsFactory.get_or_create(permission_dict["Action"])]
         else:
             actions = [
-                ActionFactory.get_or_create(action)
+                ActionsFactory.get_or_create(action)
                 for action in permission_dict["Action"]
             ]
         conditions = []
@@ -87,29 +87,8 @@ class PermissionFactory:
 
     @staticmethod
     def _create_id(
-        action: SupportedAction, effect: Effect, conditions: List[SupportedCondition]
+        action: SpecifiedActions, effect: Effect, conditions: List[SupportedCondition]
     ) -> str:
-        action_effect = f"{action.aws_action}{effect}"
+        action_effect = f"{action.aws_action_pattern}{effect}"
         conditions_str = "".join(sorted(str(c) for c in conditions))
         return hashlib.sha256(f"{action_effect}{conditions_str}".encode()).hexdigest()
-
-
-permission_data = {
-    "Effect": "Allow",
-    "Action": ["sts:AssumeRole", "s3:CopyObject"],
-    "Principal": {
-        "AWS": [
-            "arn:aws:iam::123456789012:user/Alice",
-            "arn:aws:iam::123456789012:user/Bob",
-        ]
-    },
-    "Condition": {
-        "DateGreaterThan": {"aws:CurrentTime": "2023-01-01T00:00:00Z"},
-        "IpAddress": {"aws:SourceIp": "203.0.113.0/24"},
-    },
-    "Resource": "arn:aws:s3:::example-bucket/*",
-}
-
-permissions = PermissionFactory.from_dict(permission_data)
-for perm in permissions:
-    print(perm)

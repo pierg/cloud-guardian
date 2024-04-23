@@ -9,7 +9,7 @@ from cloud_guardian.iam_model.graph.identities.resources import (
 )
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory
 from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
-from cloud_guardian.iam_model.graph.permission.actions import ActionFactory
+from cloud_guardian.iam_model.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 from cloud_guardian.iam_model.graph.permission.permission import (
     Permission,
@@ -96,7 +96,7 @@ def connect_graph(graph: IAMGraph, data: dict):
             for action in statement["Action"]:
                 arn_to_policies.setdefault(policy_arn, []).append(
                     PermissionFactory.get_or_create(
-                        action=ActionFactory.get_or_create(action),
+                        action=ActionsFactory.get_or_create(action),
                         effect=(
                             Effect.ALLOW
                             if statement["Effect"] == "Allow"

@@ -1,0 +1,28 @@
+{
+  "ResourceBasedPolicies": [
+    {
+      "ResourceName": "company-database",
+      "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/company-database",
+      "Service": "Amazon DynamoDB",
+      "ResourceType": "Table",
+      "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::123456789012:role/SuperUserRole"
+            },
+            "Action": [
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/company-database"
+          }
+        ]
+      }
+    }
+  ]
+}

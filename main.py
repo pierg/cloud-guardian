@@ -6,8 +6,11 @@ from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.initializers import initialize_factories
 from cloud_guardian.iam_model.graph.plotting import save_graph_pdf
 from cloud_guardian.utils.loaders import load_iam_json_data
-from cloud_guardian.utils.shared import aws_example_folder, output_path
+from cloud_guardian.utils.shared import output_path, data_path
 from loguru import logger
+
+
+aws_example_folder = data_path / "aws_example_pe"
 
 
 def run_analysis(data_folder: Path, output_file: Path):

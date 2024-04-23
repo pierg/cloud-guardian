@@ -1,0 +1,42 @@
+{
+  "Groups": [
+    {
+      "GroupName": "BasicUsers",
+      "GroupArn": "arn:aws:iam::123456789012:group/BasicUsers",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "Users": [
+        {
+          "UserName": "Eve",
+          "UserArn": "arn:aws:iam::123456789012:user/Eve"
+        }
+      ],
+      "AttachedPolicies": [
+        {
+          "PolicyName": "BasicUserAccess",
+          "PolicyArn": "arn:aws:iam::123456789012:policy/BasicUserAccess"
+        }
+      ]
+    },
+    {
+      "GroupName": "SuperUsers",
+      "GroupArn": "arn:aws:iam::123456789012:group/SuperUsers",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "Users": [
+        {
+          "UserName": "Admin",
+          "UserArn": "arn:aws:iam::123456789012:user/Admin"
+        },
+        {
+          "UserName": "Eve",
+          "UserArn": "arn:aws:iam::123456789012:user/Eve"
+        }
+      ],
+      "AttachedPolicies": [
+        {
+          "PolicyName": "AdminAccess",
+          "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
+        }
+      ]
+    }
+  ]
+}
