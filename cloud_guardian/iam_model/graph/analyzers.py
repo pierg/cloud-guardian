@@ -149,19 +149,15 @@ def connect_graph(graph: IAMGraph, data: dict):
     # Groups
     for group_data in data["groups.json"]["Groups"]:
         group_permissions: List[Permission] = []
-        users_belonging_to_group: List[User] = []
 
         for group_policy in group_data["AttachedPolicies"]:
             policy_arn = group_policy["PolicyArn"]
             group_permissions.extend(
                 arn_to_policies[policy_arn] if policy_arn in arn_to_policies else []
             )
-
-        for user_data in group_data["Users"]:
-            users_belonging_to_group.append(
-                UserFactory._instances[user_data["UserArn"]],
+            GroupFactory.get_or_create(
+                name=group_data["GroupName"],
+                arn=group_data["GroupArn"],
+                create_date=group_data["CreateDate"],
             )
-
-        # add the relationship for each user being part of the group (per permission)
-        for user in users_belonging_to_group:
             add_permissions(user, policy_arn, group_permissions)
