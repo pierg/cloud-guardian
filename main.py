@@ -1,7 +1,7 @@
-from math import log
 import sys
-from pathlib import Path
 import types
+from math import log
+from pathlib import Path
 
 from cloud_guardian.dynamic_model.actions import get_all_supported_actions
 from cloud_guardian.iam_model.graph.analyzers import connect_graph
@@ -9,9 +9,8 @@ from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.initializers import initialize_factories
 from cloud_guardian.iam_model.graph.plotting import save_graph_pdf
 from cloud_guardian.utils.loaders import load_iam_json_data
-from cloud_guardian.utils.shared import output_path, data_path
+from cloud_guardian.utils.shared import data_path, output_path
 from loguru import logger
-
 
 aws_example_folder = data_path / "aws_example_pe"
 
@@ -29,17 +28,24 @@ def run_analysis(data_folder: Path, output_file: Path):
         print(graph.summary())
 
         # Get all supported actions for each relationship
-        supported_actions_ids = [action.aws_action_id for action in get_all_supported_actions()]
-        for relationship in graph.get_relationships(filter_types=["haspermission", "haspermissiontoresource"]):
-            supported_actions = relationship.permission.action.find_matching_actions(supported_actions_ids)
-            logger.info(f"Supported actions for node {relationship.source.name} having permissions {relationship.permission.action}: {supported_actions}")
+        supported_actions_ids = [
+            action.aws_action_id for action in get_all_supported_actions()
+        ]
+        for relationship in graph.get_relationships(
+            filter_types=["haspermission", "haspermissiontoresource"]
+        ):
+            supported_actions = relationship.permission.action.find_matching_actions(
+                supported_actions_ids
+            )
+            logger.info(
+                f"Supported actions for node {relationship.source.name} having permissions {relationship.permission.action}: {supported_actions}"
+            )
 
         save_graph_pdf(graph, output_file)
 
     except Exception as e:
         logger.error(f"An error occurred during execution: {e}")
         raise
-
 
 
 def main():

@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from cloud_guardian.iam_model.graph.exceptions import ActionNotSupported
-from cloud_guardian.iam_model.graph.helpers import extract_identifier_from_ARN
 
 
 @dataclass(frozen=True)
@@ -12,7 +10,7 @@ class SupportedAction:
 
     def __str__(self):
         return f"{self.id} ({self.category})"
-    
+
 
 @dataclass(frozen=True)
 class AssumeRole(SupportedAction):
@@ -26,7 +24,6 @@ class GetObject(SupportedAction):
     category: str = "DataManagement"
     description: str = "Allows reading an object from S3."
     aws_action_id: str = "s3:GetObject"
-
 
 
 @dataclass(frozen=True)
