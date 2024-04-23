@@ -15,7 +15,9 @@ from loguru import logger
 class IAMGraph:
     """Represents an IAM policy as a directed graph where nodes are identities and edges can represent different types of relationships."""
 
-    graph: nx.DiGraph = field(default_factory=nx.DiGraph)
+    # as there can be multiple permissions between a given pair of entities,
+    # a `nx.MultiDiGraph` is required
+    graph: nx.MultiDiGraph = field(default_factory=nx.MultiDiGraph)
 
     def add_node(
         self, id: str, node: Union[User, Group, Role, Resource, SupportedService]
