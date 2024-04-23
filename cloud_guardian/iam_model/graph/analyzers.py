@@ -1,8 +1,8 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Union
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.helpers import extract_identifier_from_ARN
-from cloud_guardian.iam_model.graph.identities.group import GroupFactory
+from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
 from cloud_guardian.iam_model.graph.identities.resources import (
     Resource,
     ResourceFactory,
@@ -108,7 +108,9 @@ def connect_graph(graph: IAMGraph, data: dict):
                     )
                 )
 
-    def add_permissions(user: User, policy_arn: str, permissions: List[Permission]):
+    def add_permissions(
+        user: Union[User, Group], policy_arn: str, permissions: List[Permission]
+    ):
         # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
         # `HasPermissionToResource` (relationship between two nodes)
         # The current implementation is not optimal as the absence of target could be the
@@ -148,16 +150,15 @@ def connect_graph(graph: IAMGraph, data: dict):
 
     # Groups
     for group_data in data["groups.json"]["Groups"]:
-        group_permissions: List[Permission] = []
+        group = GroupFactory.get_or_create(
+            name=group_data["GroupName"],
+            arn=group_data["GroupArn"],
+            create_date=group_data["CreateDate"],
+        )
 
         for group_policy in group_data["AttachedPolicies"]:
-            policy_arn = group_policy["PolicyArn"]
-            group_permissions.extend(
-                arn_to_policies[policy_arn] if policy_arn in arn_to_policies else []
+            add_permissions(
+                group,
+                group_policy["PolicyArn"],
+                arn_to_policies[policy_arn] if policy_arn in arn_to_policies else [],
             )
-            GroupFactory.get_or_create(
-                name=group_data["GroupName"],
-                arn=group_data["GroupArn"],
-                create_date=group_data["CreateDate"],
-            )
-            add_permissions(user, policy_arn, group_permissions)
