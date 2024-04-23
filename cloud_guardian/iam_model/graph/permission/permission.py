@@ -1,6 +1,7 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+from enum import Enum
 
 from cloud_guardian.iam_model.graph.permission.actions import (
     ActionsFactory,
@@ -13,16 +14,48 @@ from cloud_guardian.iam_model.graph.permission.conditions import (
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 
 
+# the rank of a permission identifies it applies by definition
+# to a single entity (monadic) or to pair of entities (dyadic)
+class PermissionRank(Enum):
+    MONADIC = 1
+    DYADIC = 2
+
+
 @dataclass
 class Permission:
     id: str
+
     action: SpecifiedActions
     effect: Effect
     conditions: List[SupportedCondition]
 
+    # either
+    # - monadic (attached to a node) or
+    # - dyadic (attached to a pair of nodes)
+    rank: Optional[PermissionRank] = None
+
     def __str__(self):
         conditions_str = "\n".join(str(condition) for condition in self.conditions)
         return f"Action: {self.action}\nEffect: {self.effect}\nConditions: [{conditions_str}]\n"
+
+    def __post_init__(self):
+        # set the permission rank
+        custom_ranks = {
+            "create": PermissionRank.MONADIC,
+            # add more keywords and their corresponding ranks here
+        }
+
+        # rank already set? skip
+        if self.rank is not None:
+            return
+
+        for keyword, custom_rank in custom_ranks.items():
+            if keyword in self.action.id.lower():
+                self.rank = custom_rank
+                break
+        else:
+            # rank is dyadic by default
+            self.rank = PermissionRank.DYADIC
 
     @classmethod
     def from_dict(cls, permission_dict: Dict[str, Any]) -> List["Permission"]:
@@ -57,13 +90,18 @@ class PermissionFactory:
         action: SpecifiedActions,
         effect: Effect,
         conditions: List[SupportedCondition],
+        rank: Optional[PermissionRank],
     ) -> Permission:
         permission_id = cls._create_id(action, effect, conditions)
 
         if permission_id not in cls._instances:
             # Create the Permission with the generated ID
             cls._instances[permission_id] = Permission(
-                id=permission_id, action=action, effect=effect, conditions=conditions
+                id=permission_id,
+                action=action,
+                effect=effect,
+                conditions=conditions,
+                rank=rank,
             )
         return cls._instances[permission_id]
 

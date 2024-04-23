@@ -13,6 +13,7 @@ from cloud_guardian.iam_model.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 from cloud_guardian.iam_model.graph.permission.permission import (
     Permission,
+    PermissionRank,
     PermissionFactory,
 )
 from cloud_guardian.iam_model.graph.relationships.relationships import (
@@ -21,6 +22,7 @@ from cloud_guardian.iam_model.graph.relationships.relationships import (
     HasPermissionToResource,
     IsPartOf,
 )
+from loguru import logger
 
 
 def connect_graph(graph: IAMGraph, data: dict):
@@ -93,9 +95,17 @@ def connect_graph(graph: IAMGraph, data: dict):
                 arn_to_targets.setdefault(policy_arn, set()).add(arn_to_resources[arn])
 
             # policies
+
             for action in statement["Action"]:
                 arn_to_policies.setdefault(policy_arn, []).append(
                     PermissionFactory.get_or_create(
+                        rank=(
+                            # any target: monadic permission
+                            # specific target: dyadic permission
+                            PermissionRank.MONADIC
+                            if target_resource == "*"
+                            else PermissionRank.DYADIC
+                        ),
                         action=ActionsFactory.get_or_create(action),
                         effect=(
                             Effect.ALLOW
@@ -111,27 +121,27 @@ def connect_graph(graph: IAMGraph, data: dict):
     def add_permissions(
         user: Union[User, Group], policy_arn: str, permissions: List[Permission]
     ):
-        # TODO: refactor: the idea is to distinguish between `HasPermission` (one node) and
-        # `HasPermissionToResource` (relationship between two nodes)
-        # The current implementation is not optimal as the absence of target could be the
-        # result of a misconfiguration
+        for permission in permissions:
+            if permission.rank is PermissionRank.MONADIC:
+                graph.add_relationship(
+                    HasPermission(source=user, target=None, permission=permission)
+                )
+            elif permission.rank is PermissionRank.DYADIC:
+                targets = arn_to_targets.get(policy_arn, [])
 
-        targets = arn_to_targets.get(policy_arn, [])
+                # catch contradiction: dyadic permission with no target
+                # (should never happen and could be the sign of a misconfiguration)
+                if len(targets) == 0:
+                    logger.error("a dyadic permission has no target!")
 
-        if len(targets) > 0:
-            for target in targets:
-                for permission in permissions:
+                for target in targets:
                     graph.add_relationship(
                         HasPermissionToResource(
                             source=user, target=target, permission=permission
                         )
                     )
-
-        else:
-            for permission in permissions:
-                graph.add_relationship(
-                    HasPermission(source=user, target=None, permission=permission)
-                )
+            else:
+                logger.error(f"unknown permission rank: {permission.rank}")
 
     # Users permissions
     for user_data in data["users.json"]["Users"]:
