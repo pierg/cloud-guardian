@@ -21,8 +21,13 @@ from loguru import logger
 logger = logging.getLogger(__name__)
 
 
+# TODO: modularize into simple functions that are called at initialization from json or from the dynamic model when permforming actions (e.g. adding policy to a user etc..)
+
+# TODO: check / refactor / compare with analyzers_old.py if features are missing
+
+
+
 def connect_graph(graph: IAMGraph, data: dict):
-    # TODO: check / refactor / compare with analyzers_old.py
 
     all_identities = {
         **UserFactory._instances,
