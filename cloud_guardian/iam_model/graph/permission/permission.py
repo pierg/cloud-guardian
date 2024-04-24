@@ -34,6 +34,15 @@ class Permission:
     # - dyadic (attached to a pair of nodes)
     rank: Optional[PermissionRank] = None
 
+    def __eq__(self, other):
+        if not isinstance(other, Permission):
+            return False
+        return (self.id, self.action.aws_action_pattern, self.effect.name, tuple(self.conditions), self.rank) == \
+               (other.id, other.action.aws_action_pattern, other.effect.name, tuple(other.conditions), other.rank)
+
+    def __hash__(self):
+        return hash((self.id, self.action.aws_action_pattern, self.effect.name, tuple(self.conditions), self.rank))
+
     def __str__(self):
         conditions_str = "\n".join(str(condition) for condition in self.conditions)
         return f"Action: {self.action}\nEffect: {self.effect}\nConditions: [{conditions_str}]\n"
