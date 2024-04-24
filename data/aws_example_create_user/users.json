@@ -6,8 +6,8 @@
       "CreateDate": "2023-01-01T12:00:00Z",
       "AttachedPolicies": [
         {
-          "PolicyName": "CreateUserPolicy",
-          "PolicyArn": "arn:aws:iam::123456789012:policy/CreateUserPolicy"
+          "PolicyName": "BasicUserPolicy",
+          "PolicyArn": "arn:aws:iam::123456789012:policy/BasicUserPolicy"
         }
       ]
     },

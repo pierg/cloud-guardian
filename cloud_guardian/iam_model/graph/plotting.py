@@ -55,9 +55,9 @@ def draw_labels(graph, positions, labels):
 def draw_edges(graph, positions, edge_styles):
     """Draw edges with customized colors and styles."""
     edge_colors = {
-        "assume_role": ("black", "-"),
-        "part_of": ("black", "-"),
-        "permissions": ("red", "-"),
+        "can_assume_role": ("black", "-"),
+        "is_part_of": ("black", "-"),
+        "permission": ("red", "-"),
     }
     for etype, edges in edge_styles.items():
         color, style = edge_colors.get(etype, ("red", "-"))
@@ -90,7 +90,11 @@ def classify_edges(graph):
 
 def create_legends(edge_styles):
     """Create legends for node and edge types."""
-    edge_colors = {"assume_role": "black", "part_of": "black", "permissions": "red"}
+    edge_colors = {
+        "can_assume_role": "black",
+        "is_part_of": "black",
+        "permission": "red",
+    }
     legend_elements = [
         plt.Line2D(
             [0],

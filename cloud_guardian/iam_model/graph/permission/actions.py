@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
-from loguru import logger
 
 
 @dataclass
@@ -11,22 +10,24 @@ class SpecifiedActions:
     _regex_pattern: str = field(init=False, repr=False)
 
     def __post_init__(self):
-        self._regex_pattern = "^" + self.aws_action_pattern.replace("*", ".*") + "$"
+        # Convert the AWS action pattern to a regular expression pattern.
+        # This involves escaping special characters in regex, replacing "*" with ".*" to match any sequence of characters.
+        escaped_pattern = re.escape(self.aws_action_pattern).replace(r"\*", ".*")
+        self._regex_pattern = f"^{escaped_pattern}$"
 
     def matches(self, action: str) -> bool:
         """
-        Checks if a given action matches the specified AWS action pattern.
+        Checks if a given action matches the specified AWS action pattern using a regex.
         """
-        return re.match(self._regex_pattern, action) is not None
+        match_found = re.fullmatch(self._regex_pattern, action) is not None
+        return match_found
 
     def find_matching_actions(self, actions: List[str]) -> List[str]:
         """
         Returns all actions from a list that match the specified AWS action pattern.
         """
-        logger.debug(
-            f"Finding actions that match pattern: {self.aws_action_pattern} among {actions}"
-        )
-        return [action for action in actions if self.matches(action)]
+        matching_actions = [action for action in actions if self.matches(action)]
+        return matching_actions
 
     @property
     def id(self):

@@ -1,52 +1,31 @@
+import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import List
 
+# Assuming IAMGraph and UserFactory are correctly implemented elsewhere
+from cloud_guardian.iam_model.graph.graph import IAMGraph
+from cloud_guardian.iam_model.graph.identities.user import UserFactory
+from loguru import logger
+
+
+def generate_arn(resource_type: str, resource_name: str) -> str:
+    return f"arn:aws:iam::{resource_type}/{resource_name}"
 
 
 @dataclass(frozen=True)
-class SupportedAction:
+class SupportedAction(ABC):
     category: str
     description: str
     aws_action_id: str
 
-    def __str__(self):
-        return f"{self.id} ({self.category})"
+    @abstractmethod
+    def apply(self, graph: IAMGraph, **kwargs) -> None:
+        """Apply the action directly to the IAMGraph using explicitly passed parameters."""
 
-
-@dataclass(frozen=True)
-class AssumeRole(SupportedAction):
-    category: str = "RoleManagement"
-    description: str = "Allows a user to assume a specified IAM role."
-    aws_action_id: str = "sts:AssumeRole"
-
-
-@dataclass(frozen=True)
-class GetObject(SupportedAction):
-    category: str = "DataManagement"
-    description: str = "Allows reading an object from S3."
-    aws_action_id: str = "s3:GetObject"
-
-
-@dataclass(frozen=True)
-class PutObject(SupportedAction):
-    category: str = "DataManagement"
-    description: str = "Allows writing an object to S3."
-    aws_action_id: str = "s3:PutObject"
-
-
-@dataclass(frozen=True)
-class CopyObject(SupportedAction):
-    category: str = "DataManagement"
-    description: str = "Allows copying objects within S3 from one location to another."
-    aws_action_id: str = "s3:CopyObject"
-
-
-@dataclass(frozen=True)
-class DeleteObject(SupportedAction):
-    category: str = "DataManagement"
-    description: str = (
-        "Allows deleting an object in S3. Used together with CopyObject to simulate moving an object."
-    )
-    aws_action_id: str = "s3:DeleteObject"
+    @abstractmethod
+    def commands(self, **kwargs) -> List[str]:
+        """Return the AWS CLI commands to execute this action using explicitly passed parameters."""
 
 
 @dataclass(frozen=True)
@@ -57,14 +36,105 @@ class CreateUser(SupportedAction):
     )
     aws_action_id: str = "iam:CreateUser"
 
+    def apply(self, graph: IAMGraph, user_name: str) -> None:
+        logger.info(f"Creating user {user_name}")
+        arn = generate_arn("user", user_name)
+        user = UserFactory.get_or_create(user_name, arn)
+        graph.add_node(user)
+
+    def commands(self, user_name: str) -> List[str]:
+        return [
+            # f"aws iam create-user --user-name {user_name}"
+            ]
+
 
 @dataclass(frozen=True)
-class DeleteUser(SupportedAction):
-    id: str = "DeleteUser"
-    category: str = "UserManagement"
-    description: str = "Allows deletion of IAM users."
-    aws_action_id: str = "iam:DeleteUser"
+class CreatePolicy(SupportedAction):
+    category: str = "PolicyManagement"
+    description: str = "Allows creation of new IAM policies."
+    aws_action_id: str = "iam:CreatePolicy"
+
+    def apply(
+        self, graph: IAMGraph, policy_name: str, actions: List[str], resource: str = "*"
+    ) -> None:
+        policy_arn = generate_arn("policy", policy_name)
+        policy = {
+            "PolicyName": policy_name,
+            "PolicyArn": policy_arn,
+            "Actions": actions,
+            "Resource": resource,
+        }
+        graph.add_node(policy)
+
+    def commands(
+        self, policy_name: str, actions: List[str], resource: str = "*"
+    ) -> List[str]:
+        # policy_document = json.dumps(
+        #     {
+        #         "Version": "2012-10-17",
+        #         "Statement": [
+        #             {"Effect": "Allow", "Action": actions, "Resource": resource}
+        #         ],
+        #     }
+        # )
+        return [
+            # f"aws iam create-policy --policy-name {policy_name} --policy-document '{policy_document}'"
+        ]
 
 
-def get_all_supported_actions() -> list[SupportedAction]:
+@dataclass(frozen=True)
+class AttachUserPolicy(SupportedAction):
+    category: str = "PolicyManagement"
+    description: str = "Allows attaching policies to a user."
+    aws_action_id: str = "iam:AttachUserPolicy"
+
+    def apply(self, graph: IAMGraph, user_id: str, policy: dict) -> None:
+        # TODO: Implement, use the same methods/classes used during initialization to assign permisions to users
+        pass
+
+    def commands(self, user_name: str, policy_arn: str) -> List[str]:
+        return [
+            # f"aws iam attach-user-policy --user-name {user_name} --policy-arn {policy_arn}"
+        ]
+
+
+@dataclass(frozen=True)
+class AssumeRole(SupportedAction):
+    category: str = "RoleManagement"
+    description: str = "Allows assuming a role."
+    aws_action_id: str = "sts:AssumeRole"
+
+    def apply(self, graph: IAMGraph, node_id: str, role_id: str) -> None:
+        # TODO: Implement, use the same methods/classes used during initialization to assign permisions to users
+        # Effect: the permissions associated to 'role_id' get propagated to 'node_id'
+        pass
+
+    def commands(self, node_id: str, role_id: str) -> List[str]:
+        return [
+            # f"aws sts assume-role --role-arn {role_name} --role-session-name ExampleSessionName"
+        ]
+
+
+class SupportedActionsFactory:
+
+    action_mapping = {
+        "iam:CreateUser": CreateUser,
+        "iam:CreatePolicy": CreatePolicy,
+        "iam:AttachUserPolicy": AttachUserPolicy,
+        "sts:AssumeRole": AssumeRole,
+    }
+
+    _instances = {}
+
+    @classmethod
+    def get_action_by_id(cls, action_id: str) -> SupportedAction:
+        if action_id not in cls._instances:
+            cls._instances[action_id] = cls.action_mapping[action_id]()
+        return cls._instances[action_id]
+
+
+def get_all_supported_actions() -> List[SupportedAction]:
     return [action_class() for action_class in SupportedAction.__subclasses__()]
+
+
+supported_actions_ids = [action.aws_action_id for action in get_all_supported_actions()]

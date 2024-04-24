@@ -15,7 +15,17 @@
             "Action": "sts:AssumeRole"
           }
         ]
-      }
+      },
+      "AttachedPolicies": [
+        {
+          "PolicyName": "CreateUserPolicy",
+          "PolicyArn": "arn:aws:iam::123456789012:policy/CreateUserPolicy"
+        },
+        {
+          "PolicyName": "AdminAccess",
+          "PolicyArn": "arn:aws:iam::aws:policy/AdminAccess"
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Union
 
 
 @dataclass
@@ -37,7 +37,11 @@ class UserFactory:
     _instances = {}
 
     @classmethod
-    def get_or_create(cls, name: str, arn: str, create_date: datetime) -> User:
+    def get_or_create(
+        cls, name: str, arn: str, create_date: Union[datetime, None] = None
+    ) -> User:
+        if create_date is None:
+            create_date = datetime.now()
         if arn not in cls._instances:
             cls._instances[arn] = User(name=name, arn=arn, create_date=create_date)
         return cls._instances[arn]

@@ -1,31 +1,29 @@
-from typing import Dict, List, Set, Union
+import logging
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.helpers import extract_identifier_from_ARN
-from cloud_guardian.iam_model.graph.identities.group import Group, GroupFactory
-from cloud_guardian.iam_model.graph.identities.resources import (
-    Resource,
-    ResourceFactory,
-)
+from cloud_guardian.iam_model.graph.identities.group import GroupFactory
+from cloud_guardian.iam_model.graph.identities.resources import ResourceFactory
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory
-from cloud_guardian.iam_model.graph.identities.user import User, UserFactory
+from cloud_guardian.iam_model.graph.identities.user import UserFactory
 from cloud_guardian.iam_model.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 from cloud_guardian.iam_model.graph.permission.permission import (
-    Permission,
-    PermissionRank,
     PermissionFactory,
+    PermissionRank,
 )
 from cloud_guardian.iam_model.graph.relationships.relationships import (
-    CanAssumeRole,
     HasPermission,
     HasPermissionToResource,
-    IsPartOf,
 )
 from loguru import logger
 
+logger = logging.getLogger(__name__)
+
 
 def connect_graph(graph: IAMGraph, data: dict):
+    # TODO: check / refactor / compare with analyzers_old.py
+
     all_identities = {
         **UserFactory._instances,
         **GroupFactory._instances,
@@ -34,141 +32,78 @@ def connect_graph(graph: IAMGraph, data: dict):
     }
     # Add nodes
     for id, node in all_identities.items():
-        graph.add_node(id, node)
+        graph.add_node(node)
 
-    # Connect "Is Part Of" relationships
-    for group_data in data["groups.json"]["Groups"]:
-        group = GroupFactory.from_dict(group_data)
-        for user_data in group_data["Users"]:
-            user = UserFactory._instances[user_data["UserArn"]]
-            graph.add_relationship(IsPartOf(user, group))
-
-    # Connect "Can Assume Role" relationships
-    for role_data in data["roles.json"]["Roles"]:
-        role = RoleFactory.from_dict(role_data)
-        for statement in role_data["AssumeRolePolicyDocument"]["Statement"]:
-            if statement["Effect"] == "Allow":
-                principal = statement.get("Principal", {})
-                if "AWS" in principal:
-                    user = UserFactory.get_or_create(
-                        name=extract_identifier_from_ARN(principal["AWS"]),
-                        arn=principal["AWS"],
-                        create_date=None,
-                    )
-                    graph.add_relationship(CanAssumeRole(user, role))
-
-    # Connect "Has Permission To Resource" and "Has Permission" relationships
-    # TODO Refactor below:
-
-    # Mapping between ARNs and resources
-    arn_to_resources: Dict[str, Set[Resource]] = {}
-    for policy in data["resources_policies.json"]["ResourceBasedPolicies"]:
-        arn = policy["ResourceArn"]
-
-        arn_to_resources[arn] = ResourceFactory.get_or_create(
-            name=policy["ResourceName"],
-            arn=arn,
-            resource_type=policy["ResourceType"],
-            service=policy["Service"],
-        )
-
-    # Mapping between ARNs and targets and policies
-    arn_to_targets: Dict[str, Set[Resource]] = {}
-
-    # FIXME: transform list of permissions to a set of permissions
-    # (will require to make Permission hashable)
-    arn_to_policies: Dict[str, List[Permission]] = {}
-
-    for policy in data["identities_policies.json"]["IdentityBasedPolicies"]:
-        policy_arn = policy["PolicyArn"]
-
-        for statement in policy["PolicyDocument"]["Statement"]:
-            target_resource = statement["Resource"]
-
-            # targets
-            if target_resource == "*":
-                for arn in ResourceFactory._instances:
-                    arn_to_targets.setdefault(policy_arn, set()).add(
-                        arn_to_resources[arn]
-                    )
-            else:
-                arn_to_targets.setdefault(policy_arn, set()).add(arn_to_resources[arn])
-
-            # policies
-
-            for action in statement["Action"]:
-                arn_to_policies.setdefault(policy_arn, []).append(
-                    PermissionFactory.get_or_create(
-                        rank=(
-                            # any target: monadic permission
-                            # specific target: dyadic permission
-                            PermissionRank.MONADIC
-                            if target_resource == "*"
-                            else PermissionRank.DYADIC
-                        ),
-                        action=ActionsFactory.get_or_create(action),
-                        effect=(
-                            Effect.ALLOW
-                            if statement["Effect"] == "Allow"
-                            else Effect.DENY
-                        ),
-                        conditions=(
-                            statement["Condition"] if "Condition" in statement else []
-                        ),
-                    )
-                )
-
-    def add_permissions(
-        user: Union[User, Group], policy_arn: str, permissions: List[Permission]
+    # Extract permissions and their relationships from identity and resource policies
+    arn_to_permissions = {}  # Mapping policy ARN to permissions
+    for policy in data.get("identities_policies.json", {}).get(
+        "IdentityBasedPolicies", []
     ):
-        for permission in permissions:
-            if permission.rank is PermissionRank.MONADIC:
-                graph.add_relationship(
-                    HasPermission(source=user, target=None, permission=permission)
+        for statement in policy.get("PolicyDocument", {}).get("Statement", []):
+            permissions = [
+                PermissionFactory.get_or_create(
+                    rank=(
+                        PermissionRank.MONADIC
+                        if statement["Resource"] == "*"
+                        else PermissionRank.DYADIC
+                    ),
+                    action=ActionsFactory.get_or_create(action),
+                    effect=(
+                        Effect.ALLOW if statement["Effect"] == "Allow" else Effect.DENY
+                    ),
+                    conditions=statement.get("Condition", []),
                 )
-            elif permission.rank is PermissionRank.DYADIC:
-                targets = arn_to_targets.get(policy_arn, [])
+                for action in statement.get("Action", [])
+            ]
+            arn_to_permissions[policy["PolicyArn"]] = permissions
 
-                # catch contradiction: dyadic permission with no target
-                # (should never happen and could be the sign of a misconfiguration)
-                if len(targets) == 0:
-                    logger.error("a dyadic permission has no target!")
-
-                for target in targets:
-                    graph.add_relationship(
-                        HasPermissionToResource(
-                            source=user, target=target, permission=permission
+    # Function to handle permission attachment
+    def handle_permissions(identity, attached_policies):
+        for policy_data in attached_policies:
+            policy_arn = policy_data.get("PolicyArn")
+            permissions = arn_to_permissions.get(policy_arn, [])
+            for permission in permissions:
+                if permission.rank == PermissionRank.DYADIC:
+                    # Attach permission to specific resources
+                    for resource_arn in policy_data.get("Resources", []):
+                        resource = ResourceFactory.get_or_create(arn=resource_arn)
+                        graph.add_relationship(
+                            HasPermissionToResource(identity, resource, permission)
                         )
-                    )
-            else:
-                logger.error(f"unknown permission rank: {permission.rank}")
+                else:
+                    # Attach general permissions
+                    graph.add_relationship(HasPermission(identity, None, permission))
 
-    # Users permissions
-    for user_data in data["users.json"]["Users"]:
+    # Attach policies to users and roles
+    for user_data in data.get("users.json", {}).get("Users", []):
         user = UserFactory.get_or_create(
             name=user_data["UserName"],
             arn=user_data["UserArn"],
             create_date=user_data["CreateDate"],
         )
+        handle_permissions(user, user_data.get("AttachedPolicies", []))
 
-        for policy_data in user_data["AttachedPolicies"]:
-            policy_arn = policy_data["PolicyArn"]
-            permissions = (
-                arn_to_policies[policy_arn] if policy_arn in arn_to_policies else []
-            )
-            add_permissions(user, policy_arn, permissions)
-
-    # Groups
-    for group_data in data["groups.json"]["Groups"]:
+    for group_data in data.get("groups.json", {}).get("Groups", []):
         group = GroupFactory.get_or_create(
             name=group_data["GroupName"],
             arn=group_data["GroupArn"],
             create_date=group_data["CreateDate"],
         )
+        handle_permissions(group, group_data.get("AttachedPolicies", []))
 
-        for group_policy in group_data["AttachedPolicies"]:
-            add_permissions(
-                group,
-                group_policy["PolicyArn"],
-                arn_to_policies[policy_arn] if policy_arn in arn_to_policies else [],
-            )
+    # Load and connect resource-based policies
+    for resource_data in data.get("resources_policies.json", {}).get(
+        "ResourceBasedPolicies", []
+    ):
+        resource = ResourceFactory.get_or_create(
+            name=resource_data["ResourceName"],
+            arn=resource_data["ResourceArn"],
+            resource_type=resource_data["ResourceType"],
+            service=resource_data["Service"],
+        )
+        graph.add_node(resource)  # Ensure resources are added to the graph
+
+
+def extract_identifier_from_ARN(arn: str) -> str:
+    # Simple example, real extraction might be more complex.
+    return arn.split(":")[-1]

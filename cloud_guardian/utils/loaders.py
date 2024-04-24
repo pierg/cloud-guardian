@@ -13,6 +13,9 @@ def load_iam_json_data(data_folder: Path):
     data = {}
     for file_name in json_files:
         file_path = data_folder / file_name
-        with open(file_path, "r") as file:
-            data[file_name] = json.load(file)
+        if file_path.exists():
+            with open(file_path, "r") as file:
+                data[file_name] = json.load(file)
+        else:
+            data[file_name] = {}
     return data

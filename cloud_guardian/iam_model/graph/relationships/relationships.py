@@ -23,6 +23,7 @@ class IsPartOf(Relationship):
 
     source: Union[User, Role]
     target: Group
+    type: str = "is_part_of"
 
 
 @dataclass
@@ -30,6 +31,7 @@ class CanAssumeRole(Relationship):
     """Represents a 'can assume role' relationship where a user, group, role, or service can assume another role."""
 
     target: Role
+    type: str = "can_assume_role"
 
 
 @dataclass
@@ -38,6 +40,7 @@ class HasPermissionToResource(Relationship):
 
     target: Resource
     permission: Permission
+    type: str = "permission"
 
 
 @dataclass
@@ -45,6 +48,7 @@ class HasPermission(Relationship):
     """Represents a 'has permission' relationship on a single node e.g., permissions like CreateRole, DeleteRole."""
 
     permission: Permission
+    type: str = "permission"
 
     def __post_init__(self):
         self.target = self.source

@@ -1,7 +1,7 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from cloud_guardian.iam_model.graph.permission.actions import (
     ActionsFactory,
