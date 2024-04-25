@@ -1,0 +1,145 @@
+{
+    "IdentityBasedPolicies": [
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:PutObject",
+                            "s3:List*"
+                        ],
+                        "Resource": "*"
+                    }
+                ]
+            },
+            "ID": "arn:aws:iam::policy/BasicUserPolicy"
+        },
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:PutObject",
+                            "s3:List*",
+                            "s3:DeleteObject"
+                        ],
+                        "Resource": "*"
+                    }
+                ]
+            },
+            "ID": "arn:aws:iam::policy/AdvancedUserPolicy"
+        },
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "iam:CreateUser",
+                            "iam:AttachUserPolicy"
+                        ],
+                        "Resource": "*"
+                    }
+                ]
+            },
+            "ID": "arn:aws:iam::policy/CreateUserPolicy"
+        },
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "*",
+                        "Resource": "*"
+                    }
+                ]
+            },
+            "ID": "arn:aws:iam::policy/AdminAccess"
+        }
+    ],
+    "ResourceBasedPolicies": [
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "ID": "arn:aws:iam::group/BasicUsers"
+                        },
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:ListBucket"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::company-files",
+                            "arn:aws:s3:::company-files/*"
+                        ]
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "ID": "arn:aws:iam::role/SuperUserRole"
+                        },
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:PutObject",
+                            "s3:DeleteObject",
+                            "s3:ListBucket"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::company-files",
+                            "arn:aws:s3:::company-files/*"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "ID": "arn:aws:iam::group/BasicUsers"
+                        },
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:ListBucket",
+                            "s3:PutObject"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::user-files",
+                            "arn:aws:s3:::user-files/*"
+                        ]
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "ID": "arn:aws:iam::role/SuperUserRole"
+                        },
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:PutObject",
+                            "s3:DeleteObject",
+                            "s3:ListBucket"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::user-files",
+                            "arn:aws:s3:::user-files/*"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

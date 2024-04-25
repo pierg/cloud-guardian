@@ -77,4 +77,4 @@ def main(data_folder_name: str):
 
 
 if __name__ == "__main__":
-    main("aws_example_create_user")
+    main("toy_example/original")

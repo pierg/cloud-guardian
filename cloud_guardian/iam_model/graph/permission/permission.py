@@ -99,7 +99,7 @@ class PermissionFactory:
         action: SpecifiedActions,
         effect: Effect,
         conditions: List[SupportedCondition],
-        rank: Optional[PermissionRank],
+        rank: Optional[PermissionRank] = None,
     ) -> Permission:
         permission_id = cls._create_id(action, effect, conditions)
 
@@ -110,7 +110,7 @@ class PermissionFactory:
                 action=action,
                 effect=effect,
                 conditions=conditions,
-                rank=rank,
+                rank=rank
             )
         return cls._instances[permission_id]
 
@@ -131,6 +131,13 @@ class PermissionFactory:
                 conditions.append(condition)
 
         return [cls.get_or_create(action, effect, conditions) for action in actions]
+
+    @staticmethod
+    def from_policy_document(policy_document: Dict[str, Any]) -> List[Permission]:
+        permissions = []
+        for statement in policy_document["Statement"]:
+            permissions.extend(PermissionFactory.from_dict(statement))
+        return permissions
 
     @staticmethod
     def _create_id(

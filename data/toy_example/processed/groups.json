@@ -1,0 +1,23 @@
+{
+    "Groups": [
+        {
+            "Users": [
+                {
+                    "ID": "arn:aws:iam::user/Eve"
+                },
+                {
+                    "ID": "arn:aws:iam::user/Alice"
+                },
+                {
+                    "ID": "arn:aws:iam::user/Bob"
+                }
+            ],
+            "AttachedPolicies": [
+                {
+                    "ID": "arn:aws:iam::policy/BasicUserPolicy"
+                }
+            ],
+            "ID": "arn:aws:iam::group/BasicUsers"
+        }
+    ]
+}

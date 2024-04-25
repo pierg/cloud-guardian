@@ -1,0 +1,42 @@
+{
+  "Users": [
+    {
+      "UserName": "Alice",
+      "UserArn": "arn:aws:iam::user/Alice",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "AttachedPolicies": [
+        {
+          "PolicyName": "AdvancedUserPolicy",
+          "PolicyArn": "arn:aws:iam::policy/AdvancedUserPolicy"
+        }
+      ]
+    },
+    {
+      "UserName": "Bob",
+      "UserArn": "arn:aws:iam::user/Bob",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "AttachedPolicies": [
+        {
+          "PolicyName": "BasicUserPolicy",
+          "PolicyArn": "arn:aws:iam::policy/AdvancedUserPolicy"
+        }
+      ]
+    },
+    {
+      "UserName": "Eve",
+      "UserArn": "arn:aws:iam::user/Eve",
+      "CreateDate": "2023-01-01T12:00:00Z"
+    },
+    {
+      "UserName": "Admin",
+      "UserArn": "arn:aws:iam::user/Admin",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "AttachedPolicies": [
+        {
+          "PolicyName": "AdminAccess",
+          "PolicyArn": "arn:aws:iam::policy/AdminAccess"
+        }
+      ]
+    }
+  ]
+}

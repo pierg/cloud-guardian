@@ -132,7 +132,7 @@ class ArnMapper:
 arn_mapper = ArnMapper()
 
 
-def connect_graph(graph: IAMGraph, data: dict):
+def connect_graph(graph: IAMGraph, groups_data, policies_data, roles_data, users_data):
     all_identities = {
         **UserFactory._instances,
         **GroupFactory._instances,
@@ -145,7 +145,7 @@ def connect_graph(graph: IAMGraph, data: dict):
 
     # Extract permissions and their relationships from identity and resource policies
     # Mapping policy ARN to permissions
-    for policy in data.get("identities_policies.json", {}).get(
+    for policy in policies_data.get(
         "IdentityBasedPolicies", []
     ):
         for statement in policy.get("PolicyDocument", {}).get("Statement", []):
@@ -210,7 +210,7 @@ def connect_graph(graph: IAMGraph, data: dict):
             graph.add_relationship(CanAssumeRole(user, role))
 
     # Attach policies to users, groups, and roles
-    for user_data in data.get("users.json", {}).get("Users", []):
+    for user_data in users_data.get("Users", []):
         user = UserFactory.get_or_create(
             name=user_data["UserName"],
             arn=user_data["UserArn"],
@@ -218,7 +218,7 @@ def connect_graph(graph: IAMGraph, data: dict):
         )
         handle_permissions(user, user_data.get("AttachedPolicies", []))
 
-    for group_data in data.get("groups.json", {}).get("Groups", []):
+    for group_data in groups_data.get("Groups", []):
         group = GroupFactory.get_or_create(
             name=group_data["GroupName"],
             arn=group_data["GroupArn"],
@@ -228,7 +228,7 @@ def connect_graph(graph: IAMGraph, data: dict):
             group, group_data.get("AttachedPolicies", []), group_data["Users"], IsPartOf
         )
 
-    for role_data in data["roles.json"]["Roles"]:
+    for role_data in roles_data["Roles"]:
         for statement in role_data["AssumeRolePolicyDocument"]["Statement"]:
             if statement["Effect"] == "Allow":
                 principal = statement.get("Principal", {})
@@ -246,7 +246,7 @@ def connect_graph(graph: IAMGraph, data: dict):
                     )
 
     # Load and connect resource-based policies
-    for resource_data in data.get("resources_policies.json", {}).get(
+    for resource_data in policies_data.get(
         "ResourceBasedPolicies", []
     ):
         resource = ResourceFactory.get_or_create(

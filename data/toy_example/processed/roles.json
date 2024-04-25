@@ -1,0 +1,19 @@
+{
+    "Roles": [
+        {
+            "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "ID": "arn:aws:iam::user/Admin"
+                        },
+                        "Action": "sts:AssumeRole"
+                    }
+                ]
+            },
+            "ID": "arn:aws:iam::role/SuperUserRole"
+        }
+    ]
+}

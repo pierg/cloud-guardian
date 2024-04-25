@@ -1,0 +1,31 @@
+{
+    "Users": [
+        {
+            "AttachedPolicies": [
+                {
+                    "ID": "arn:aws:iam::policy/AdvancedUserPolicy"
+                }
+            ],
+            "ID": "arn:aws:iam::user/Alice"
+        },
+        {
+            "AttachedPolicies": [
+                {
+                    "ID": "arn:aws:iam::policy/AdvancedUserPolicy"
+                }
+            ],
+            "ID": "arn:aws:iam::user/Bob"
+        },
+        {
+            "ID": "arn:aws:iam::user/Eve"
+        },
+        {
+            "AttachedPolicies": [
+                {
+                    "ID": "arn:aws:iam::policy/AdminAccess"
+                }
+            ],
+            "ID": "arn:aws:iam::user/Admin"
+        }
+    ]
+}

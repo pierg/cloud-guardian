@@ -1,0 +1,29 @@
+{
+  "Groups": [
+    {
+      "GroupName": "BasicUsers",
+      "GroupArn": "arn:aws:iam::group/BasicUsers",
+      "CreateDate": "2023-01-01T12:00:00Z",
+      "Users": [
+        {
+          "UserName": "Eve",
+          "UserArn": "arn:aws:iam::user/Eve"
+        },
+        {
+          "UserName": "Alice",
+          "UserArn": "arn:aws:iam::user/Alice"
+        },
+        {
+          "UserName": "Bob",
+          "UserArn": "arn:aws:iam::user/Bob"
+        }
+      ],
+      "AttachedPolicies": [
+        {
+          "PolicyName": "BasicUserPolicy",
+          "PolicyArn": "arn:aws:iam::policy/BasicUserPolicy"
+        }
+      ]
+    }
+  ]
+}

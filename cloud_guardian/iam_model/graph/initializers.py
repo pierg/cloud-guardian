@@ -5,23 +5,23 @@ from cloud_guardian.iam_model.graph.identities.resources import ResourceFactory
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory
 from cloud_guardian.iam_model.graph.identities.services import ServiceFactory
 from cloud_guardian.iam_model.graph.identities.user import UserFactory
-from cloud_guardian.utils.loaders import load_iam_json_data
+from cloud_guardian.utils.loaders import load_iam_data_into_dictionaries
 from zipp import Path
 
 
-def initialize_factories(data):
+def initialize_factories(groups_data, policies_data, roles_data, users_data):
     # Handle 'users.json'
-    users = data.get("users.json", {})
+    users = users_data
     for user_data in users.get("Users", []):
         UserFactory.from_dict(user_data)
 
     # Handle 'groups.json'
-    groups = data.get("groups.json", {})
+    groups = groups_data
     for group_data in groups.get("Groups", []):
         GroupFactory.from_dict(group_data)
 
     # Handle 'roles.json'
-    roles = data.get("roles.json", {})
+    roles = roles_data
     for role_data in roles.get("Roles", []):
         RoleFactory.from_dict(role_data)
         # Process AssumeRolePolicyDocument if it exists
@@ -32,14 +32,16 @@ def initialize_factories(data):
                 ServiceFactory.get_or_create(service_principal)
 
     # Handle 'resources_policies.json'
-    resources = data.get("resources_policies.json", {})
+    resources = policies_data
     for resource_data in resources.get("ResourceBasedPolicies", []):
         ResourceFactory.from_dict(resource_data)
 
 
 def create_graph(data_folder: Path) -> IAMGraph:
-    data = load_iam_json_data(data_folder)
-    initialize_factories(data)
+    print(data_folder)
+    groups_data, policies_data, roles_data, users_data = load_iam_data_into_dictionaries(data_folder)
+
+    initialize_factories(groups_data, policies_data, roles_data, users_data)
     graph = IAMGraph()
-    connect_graph(graph, data)
+    connect_graph(graph, groups_data, policies_data, roles_data, users_data)
     return graph
