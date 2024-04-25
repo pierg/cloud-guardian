@@ -32,9 +32,11 @@ def initialize_factories(groups_data, policies_data, roles_data, users_data):
                 ServiceFactory.get_or_create(service_principal)
 
     # Handle 'resources_policies.json'
-    resources = policies_data
-    for resource_data in resources.get("ResourceBasedPolicies", []):
-        ResourceFactory.from_dict(resource_data)
+    # FIXME: `ResourceFactory.from_dict` is not adapted to the new policies.json contents
+    # resources = policies_data
+    # for resource_data in resources.get("ResourceBasedPolicies", []):
+    #     for statement in resource_data.get("PolicyDocument", []).get("Statement", []):
+    #         ResourceFactory.from_dict(statement["Resource"])
 
 
 def create_graph(data_folder: Path) -> IAMGraph:

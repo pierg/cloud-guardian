@@ -33,12 +33,10 @@ def load_iam_data_into_dictionaries(data_folder: Path):
     return groups_data, policies_data, roles_data, users_data
 
 
-def extract_bucket_names(policies):
-    # TODO: fix small bug
+def extract_bucket_names(policy):
     bucket_names = set()
-    for policy in policies:
-        statements = policy['PolicyDocument']['Statement']
-        for statement in statements:
+    statements = policy['PolicyDocument']['Statement']
+    for statement in statements:
             resources = statement['Resource']
             for resource in resources:
                 if resource.startswith("arn:aws:s3:::"):

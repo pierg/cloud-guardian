@@ -1,12 +1,21 @@
 import json
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
+import boto3
+
 # Assuming IAMGraph and UserFactory are correctly implemented elsewhere
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities.user import UserFactory
-from loguru import logger
+from cloud_guardian.iam_model.graph.relationships.relationships import (
+    HasPermissionToResource,
+)
+
+logger = logging.getLogger(__name__)
+
+iam = boto3.client("iam")
 
 
 def generate_arn(resource_type: str, resource_name: str) -> str:
@@ -45,7 +54,7 @@ class CreateUser(SupportedAction):
     def commands(self, user_name: str) -> List[str]:
         return [
             # f"aws iam create-user --user-name {user_name}"
-            ]
+        ]
 
 
 @dataclass(frozen=True)
@@ -89,8 +98,37 @@ class AttachUserPolicy(SupportedAction):
     aws_action_id: str = "iam:AttachUserPolicy"
 
     def apply(self, graph: IAMGraph, user_id: str, policy: dict) -> None:
-        # TODO: Implement, use the same methods/classes used during initialization to assign permisions to users
-        pass
+        # is the policy already in the graph?
+        policy_node = next(
+            (
+                node
+                for node in graph.graph.nodes()
+                if "PolicyArn" in node and node["PolicyArn"] == policy["PolicyArn"]
+            ),
+            None,
+        )
+
+        # if the policy is not already in the graph, create it
+        if not policy_node:
+            try:
+                policy_node = iam.create_policy(
+                    PolicyName=policy["PolicyName"],
+                    PolicyDocument=json.dumps(policy["PolicyDocument"]),
+                )
+            except Exception as e:
+                logger.error(f"cannot create policy: {e}")
+                return
+
+            # FIXME: a Policy class is now needed
+            graph.add_node(policy_node)
+
+        # associate user with policy
+        # FIXME: rethink the relationship between user and Policy
+        node = graph.get_node_by_id(user_id)
+        if node:
+            graph.add_relationship(HasPermissionToResource(node, policy_node))
+        else:
+            logger.warning(f"unable to attach user to policy: user {user_id} not found")
 
     def commands(self, user_name: str, policy_arn: str) -> List[str]:
         return [
@@ -116,7 +154,6 @@ class AssumeRole(SupportedAction):
 
 
 class SupportedActionsFactory:
-
     action_mapping = {
         "iam:CreateUser": CreateUser,
         "iam:CreatePolicy": CreatePolicy,

@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Dict, List, Optional
 
 from cloud_guardian.iam_model.graph.graph import IAMGraph
@@ -10,21 +11,18 @@ from cloud_guardian.iam_model.graph.identities.resources import (
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory
 from cloud_guardian.iam_model.graph.identities.user import UserFactory
 from cloud_guardian.iam_model.graph.permission.actions import ActionsFactory
+from cloud_guardian.iam_model.graph.permission.conditions import SupportedCondition
 from cloud_guardian.iam_model.graph.permission.effects import Effect
 from cloud_guardian.iam_model.graph.permission.permission import (
+    Permission,
     PermissionFactory,
     PermissionRank,
-    Permission,
 )
 from cloud_guardian.iam_model.graph.relationships.relationships import (
-    IsPartOf,
     CanAssumeRole,
     HasPermission,
     HasPermissionToResource,
-)
-from collections import defaultdict
-from cloud_guardian.iam_model.graph.permission.conditions import (
-    SupportedCondition,
+    IsPartOf,
 )
 
 logger = logging.getLogger(__name__)
@@ -145,9 +143,7 @@ def connect_graph(graph: IAMGraph, groups_data, policies_data, roles_data, users
 
     # Extract permissions and their relationships from identity and resource policies
     # Mapping policy ARN to permissions
-    for policy in policies_data.get(
-        "IdentityBasedPolicies", []
-    ):
+    for policy in policies_data.get("IdentityBasedPolicies", []):
         for statement in policy.get("PolicyDocument", {}).get("Statement", []):
             # targets
             target_resource = statement["Resource"]
@@ -246,23 +242,24 @@ def connect_graph(graph: IAMGraph, groups_data, policies_data, roles_data, users
                     )
 
     # Load and connect resource-based policies
-    for resource_data in policies_data.get(
-        "ResourceBasedPolicies", []
-    ):
-        resource = ResourceFactory.get_or_create(
-            name=resource_data["ResourceName"],
-            arn=resource_data["ResourceArn"],
-            resource_type=resource_data["ResourceType"],
-            service=resource_data["Service"],
-        )
-        graph.add_node(resource)  # Ensure resources are added to the graph
+    # FIXME: `ResourceFactory.from_dict` is not adapted to the new policies.json contents
+    # for resource_data in policies_data.get(
+    #     "ResourceBasedPolicies", []
+    # ):
+    #     resource = ResourceFactory.get_or_create(
+    #         name=resource_data["ResourceName"],
+    #         arn=resource_data["ResourceArn"],
+    #         resource_type=resource_data["ResourceType"],
+    #         service=resource_data["Service"],
+    #     )
+    #     graph.add_node(resource)  # Ensure resources are added to the graph
 
-        arn_mapper.add_resource(
-            resource_data["ResourceName"],
-            resource_data["ResourceArn"],
-            resource_data["ResourceType"],
-            resource_data["Service"],
-        )
+    #     arn_mapper.add_resource(
+    #         resource_data["ResourceName"],
+    #         resource_data["ResourceArn"],
+    #         resource_data["ResourceType"],
+    #         resource_data["Service"],
+    #     )
 
 
 def extract_identifier_from_ARN(arn: str) -> str:
