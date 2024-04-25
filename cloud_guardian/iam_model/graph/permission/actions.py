@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import List
 
 
-
 @dataclass
 class SpecifiedActions:
     aws_action_pattern: str

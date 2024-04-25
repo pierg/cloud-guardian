@@ -1,10 +1,9 @@
 import json
-import boto3
-from botocore.exceptions import ClientError
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
-from cloud_guardian.utils.helpers import print_function_signatures
+from botocore.exceptions import ClientError
 from loguru import logger
+
 
 def create_bucket(s3, bucket_name: str, region: Optional[str] = None) -> Optional[str]:
     """
@@ -14,7 +13,10 @@ def create_bucket(s3, bucket_name: str, region: Optional[str] = None) -> Optiona
         if region is None:
             s3.create_bucket(Bucket=bucket_name)
         else:
-            s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={'LocationConstraint': region})
+            s3.create_bucket(
+                Bucket=bucket_name,
+                CreateBucketConfiguration={"LocationConstraint": region},
+            )
         logger.info(f"Bucket {bucket_name} created")
         return bucket_name
     except ClientError as e:
@@ -28,10 +30,11 @@ def get_bucket_policy(s3, bucket_name: str) -> Optional[Dict]:
     """
     try:
         response = s3.get_bucket_policy(Bucket=bucket_name)
-        return json.loads(response['Policy'])
+        return json.loads(response["Policy"])
     except ClientError as e:
         logger.error(f"Error retrieving policy for bucket {bucket_name}: {e}")
         return None
+
 
 def set_bucket_policy(s3, bucket_name: str, policy_document: Dict) -> bool:
     """
@@ -47,8 +50,6 @@ def set_bucket_policy(s3, bucket_name: str, policy_document: Dict) -> bool:
         raise e
 
 
-
-
 def delete_bucket(s3, bucket_name: str) -> bool:
     """
     Delete an S3 bucket.
@@ -60,18 +61,25 @@ def delete_bucket(s3, bucket_name: str) -> bool:
         logger.error(f"Error deleting bucket {bucket_name}: {e}")
         return False
 
+
 def list_buckets(s3) -> List[Dict[str, str]]:
     """
     List all S3 buckets in the account.
     """
     try:
         response = s3.list_buckets()
-        return [{'name': bucket['Name'], 'creation_date': bucket['CreationDate']} for bucket in response['Buckets']]
+        return [
+            {"name": bucket["Name"], "creation_date": bucket["CreationDate"]}
+            for bucket in response["Buckets"]
+        ]
     except ClientError as e:
         logger.error(f"Error listing buckets: {e}")
         return []
 
-def upload_file(s3, bucket_name: str, file_name: str, object_name: Optional[str] = None) -> bool:
+
+def upload_file(
+    s3, bucket_name: str, file_name: str, object_name: Optional[str] = None
+) -> bool:
     """
     Upload a file to an S3 bucket.
     """
@@ -84,6 +92,7 @@ def upload_file(s3, bucket_name: str, file_name: str, object_name: Optional[str]
         logger.error(f"Error uploading file to bucket {bucket_name}: {e}")
         return False
 
+
 def delete_file(s3, bucket_name: str, object_name: str) -> bool:
     """
     Delete a file from an S3 bucket.
@@ -95,16 +104,18 @@ def delete_file(s3, bucket_name: str, object_name: str) -> bool:
         logger.error(f"Error deleting file from bucket {bucket_name}: {e}")
         return False
 
+
 def get_bucket_policy(s3, bucket_name: str) -> Optional[Dict]:
     """
     Get the policy of an S3 bucket.
     """
     try:
         response = s3.get_bucket_policy(Bucket=bucket_name)
-        return json.loads(response['Policy'])
+        return json.loads(response["Policy"])
     except ClientError as e:
         logger.error(f"Error retrieving policy for bucket {bucket_name}: {e}")
         return None
+
 
 def set_bucket_policy(s3, bucket_name: str, policy_document: Dict) -> bool:
     """
@@ -118,6 +129,7 @@ def set_bucket_policy(s3, bucket_name: str, policy_document: Dict) -> bool:
         logger.error(f"Error setting policy for bucket {bucket_name}: {e}")
         return False
 
+
 def delete_bucket_policy(s3, bucket_name: str) -> bool:
     """
     Delete the policy of an S3 bucket.
@@ -128,4 +140,3 @@ def delete_bucket_policy(s3, bucket_name: str) -> bool:
     except ClientError as e:
         logger.error(f"Error deleting policy for bucket {bucket_name}: {e}")
         return False
-

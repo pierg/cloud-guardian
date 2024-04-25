@@ -94,12 +94,10 @@ class IAMGraphMDP:
         parameters = Parameters.from_dict(transition_data["parameters"])
         entity = self.graph.get_entity_by_id(transition_data["entity"])
         self.step(entity, action_id, parameters)
-        
-    
+
     def execute_trace(self, trace: dict):
         for transition_data in trace.get("transitions", []):
             self.step_from_dict(transition_data)
-        
 
     def to_commands(self) -> List[str]:
         commands = []

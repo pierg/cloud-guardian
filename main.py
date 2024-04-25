@@ -1,3 +1,4 @@
+from cloud_guardian.dynamic_model.actions import AttachUserPolicy
 from cloud_guardian.dynamic_model.model import IAMGraphMDP, Parameters
 from cloud_guardian.iam_model.graph.initializers import create_graph
 from cloud_guardian.iam_model.graph.plotting import save_graph_pdf
@@ -5,7 +6,6 @@ from cloud_guardian.utils.shared import data_path, output_path
 
 
 def main(data_folder_name: str):
-
     iam_graph = create_graph(data_path / data_folder_name)
 
     print(iam_graph.summary())
@@ -48,7 +48,6 @@ def main(data_folder_name: str):
     print(iam_graph.summary())
     save_graph_pdf(iam_graph, output_path / f"{data_folder_name}_new1_example_1.pdf")
 
-
     # We can execute actions from dict
 
     # Alternative Example with "iam:CreateUser" action by loading a trace
@@ -57,15 +56,37 @@ def main(data_folder_name: str):
     save_graph_pdf(iam_graph_new, output_path / f"{data_folder_name}_new2.pdf")
     iam_mdp_new = IAMGraphMDP(iam_graph_new)
     step_dict = {
-                'entity': 'arn:aws:iam::123456789012:user/Eve', 
-                'action': 'iam:CreateUser', 
-                'parameters': 
-                    {'user_name': 'new_user'}}
+        "entity": "arn:aws:iam::123456789012:user/Eve",
+        "action": "iam:CreateUser",
+        "parameters": {"user_name": "new_user"},
+    }
 
     iam_mdp_new.step_from_dict(step_dict)
     print(iam_graph.summary())
     save_graph_pdf(iam_graph, output_path / f"{data_folder_name}_new2_example_1.pdf")
 
+    # TEST
+    # TODO: remove
+    test = AttachUserPolicy()
+    test.apply(
+        iam_graph,
+        "arn:aws:iam::user/Alice",
+        {
+            "PolicyName": "ExamplePolicyAlice",
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "s3:ListAllMyBuckets",
+                        "Resource": "arn:aws:s3:::*",
+                    }
+                ],
+            },
+            "Description": "Policy for ExamplePolicy",
+        },
+    )
+    # TEST
 
     # Example: perform a priviledge escalation attack
     # TODO
@@ -73,7 +94,6 @@ def main(data_folder_name: str):
     # Step 2 - Eve creates a new user
     # Step 3 - Eve creates a new policy
     # Step 4 - Eve attaches the admin policy to the new user
-
 
 
 if __name__ == "__main__":
