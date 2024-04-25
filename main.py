@@ -65,7 +65,7 @@ def main(data_folder_name: str):
     print(iam_graph.summary())
     save_graph_pdf(iam_graph, output_path / f"{data_folder_name}_new2_example_1.pdf")
 
-    ### TEST
+    # TEST
     # TODO: remove
     test = AttachUserPolicy()
     test.apply(
@@ -86,7 +86,7 @@ def main(data_folder_name: str):
             "Description": "Policy for ExamplePolicy",
         },
     )
-    ### TEST
+    # TEST
 
     # Example: perform a priviledge escalation attack
     # TODO

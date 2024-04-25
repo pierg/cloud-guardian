@@ -37,11 +37,30 @@ class Permission:
     def __eq__(self, other):
         if not isinstance(other, Permission):
             return False
-        return (self.id, self.action.aws_action_pattern, self.effect.name, tuple(self.conditions), self.rank) == \
-               (other.id, other.action.aws_action_pattern, other.effect.name, tuple(other.conditions), other.rank)
+        return (
+            self.id,
+            self.action.aws_action_pattern,
+            self.effect.name,
+            tuple(self.conditions),
+            self.rank,
+        ) == (
+            other.id,
+            other.action.aws_action_pattern,
+            other.effect.name,
+            tuple(other.conditions),
+            other.rank,
+        )
 
     def __hash__(self):
-        return hash((self.id, self.action.aws_action_pattern, self.effect.name, tuple(self.conditions), self.rank))
+        return hash(
+            (
+                self.id,
+                self.action.aws_action_pattern,
+                self.effect.name,
+                tuple(self.conditions),
+                self.rank,
+            )
+        )
 
     def __str__(self):
         conditions_str = "\n".join(str(condition) for condition in self.conditions)
@@ -110,7 +129,7 @@ class PermissionFactory:
                 action=action,
                 effect=effect,
                 conditions=conditions,
-                rank=rank
+                rank=rank,
             )
         return cls._instances[permission_id]
 

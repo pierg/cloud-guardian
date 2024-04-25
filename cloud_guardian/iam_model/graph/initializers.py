@@ -1,7 +1,6 @@
 from cloud_guardian.iam_model.graph.analyzers import connect_graph
 from cloud_guardian.iam_model.graph.graph import IAMGraph
 from cloud_guardian.iam_model.graph.identities.group import GroupFactory
-from cloud_guardian.iam_model.graph.identities.resources import ResourceFactory
 from cloud_guardian.iam_model.graph.identities.role import RoleFactory
 from cloud_guardian.iam_model.graph.identities.services import ServiceFactory
 from cloud_guardian.iam_model.graph.identities.user import UserFactory
@@ -41,7 +40,9 @@ def initialize_factories(groups_data, policies_data, roles_data, users_data):
 
 def create_graph(data_folder: Path) -> IAMGraph:
     print(data_folder)
-    groups_data, policies_data, roles_data, users_data = load_iam_data_into_dictionaries(data_folder)
+    groups_data, policies_data, roles_data, users_data = (
+        load_iam_data_into_dictionaries(data_folder)
+    )
 
     initialize_factories(groups_data, policies_data, roles_data, users_data)
     graph = IAMGraph()

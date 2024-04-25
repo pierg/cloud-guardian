@@ -1,14 +1,16 @@
-import boto3
 import json
+
+import boto3
 from moto import mock_aws
+
 
 @mock_aws
 def main():
     # Initialize the S3 client
-    s3 = boto3.client('s3', region_name='us-east-1')
+    s3 = boto3.client("s3", region_name="us-east-1")
 
     # Bucket name
-    bucket_name = 'example-bucket'
+    bucket_name = "example-bucket"
 
     # Create an S3 bucket
     try:
@@ -19,7 +21,7 @@ def main():
 
     # Upload an object to the bucket
     try:
-        object_name = 'example-file.txt'
+        object_name = "example-file.txt"
         s3.put_object(Bucket=bucket_name, Key=object_name, Body="Sample content")
         print(f"Uploaded {object_name} to {bucket_name} successfully.")
     except Exception as e:
@@ -33,9 +35,9 @@ def main():
                 "Effect": "Allow",
                 "Principal": "*",
                 "Action": "s3:GetObject",
-                "Resource": f"arn:aws:s3:::{bucket_name}/*"
+                "Resource": f"arn:aws:s3:::{bucket_name}/*",
             }
-        ]
+        ],
     }
 
     # Set the bucket policy
@@ -45,6 +47,7 @@ def main():
         print(f"Policy set successfully on bucket {bucket_name}.")
     except Exception as e:
         print(f"Failed to set bucket policy: {e}")
+
 
 # Run the main function to execute all operations under the mock
 main()
