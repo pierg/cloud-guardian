@@ -35,5 +35,3 @@ class BiMap:
         print("-" * 63)
         for key, value in self.map.items():
             print(f"{key.ljust(30)} | {value.ljust(30)}")
-
-

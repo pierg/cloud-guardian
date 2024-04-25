@@ -1,4 +1,3 @@
-
 from botocore.exceptions import ClientError
 from cloud_guardian import logger
 

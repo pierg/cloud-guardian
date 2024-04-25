@@ -1,5 +1,6 @@
 from cloud_guardian import logger
 from cloud_guardian.aws.aws_manager import AWSManager
+from cloud_guardian.iam_model.iam_manager import IAMManager
 from cloud_guardian.utils.processing import process_files
 from cloud_guardian.utils.shared import data_path
 from moto import mock_aws
@@ -13,6 +14,11 @@ process_files(data_folder / "original", data_folder / "processed")
 aws_manager = AWSManager()
 
 aws_manager.import_from_json(data_folder / "processed")
+
+iam_manager = IAMManager(aws_manager)
+
+# TODO: Implement the following methods
+iam_manager.update_graph()
 
 
 mock.stop()
