@@ -80,8 +80,8 @@
                             "s3:ListBucket"
                         ],
                         "Resource": [
-                            "arn:aws:s3:: 123456789012:company-files",
-                            "arn:aws:s3:: 123456789012:company-files/*"
+                            "arn:aws:s3::123456789012:company-files",
+                            "arn:aws:s3::123456789012:company-files/*"
                         ]
                     },
                     {
@@ -96,8 +96,8 @@
                             "s3:ListBucket"
                         ],
                         "Resource": [
-                            "arn:aws:s3:: 123456789012:company-files",
-                            "arn:aws:s3:: 123456789012:company-files/*"
+                            "arn:aws:s3::123456789012:company-files",
+                            "arn:aws:s3::123456789012:company-files/*"
                         ]
                     }
                 ]
@@ -118,8 +118,8 @@
                             "s3:PutObject"
                         ],
                         "Resource": [
-                            "arn:aws:s3:: 123456789012:user-files",
-                            "arn:aws:s3:: 123456789012:user-files/*"
+                            "arn:aws:s3::123456789012:user-files",
+                            "arn:aws:s3::123456789012:user-files/*"
                         ]
                     },
                     {
@@ -134,8 +134,8 @@
                             "s3:ListBucket"
                         ],
                         "Resource": [
-                            "arn:aws:s3:: 123456789012:user-files",
-                            "arn:aws:s3:: 123456789012:user-files/*"
+                            "arn:aws:s3::123456789012:user-files",
+                            "arn:aws:s3::123456789012:user-files/*"
                         ]
                     }
                 ]

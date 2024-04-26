@@ -44,8 +44,6 @@ class IAMManager:
 
             get_identity_or_resource_from_arn(source_arn, self.iam, self.s3)
             for resource_arn in statement["Resource"]:
-                # FIXME: `arn:aws:s3:: 123456789012:company-files:` is considered invalid:
-                # `Unsupported S3 resource type 'company-files' in ARN`
                 target = get_identity_or_resource_from_arn(
                     resource_arn, self.iam, self.s3
                 )
