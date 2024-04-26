@@ -1,6 +1,10 @@
 import json
 import os
+import re
 from pathlib import Path
+
+from arnparse import arnparse
+from cloud_guardian import logger
 
 
 def load_iam_data_into_dictionaries(data_folder: Path):
@@ -39,10 +43,10 @@ def extract_bucket_names(policy):
     for statement in statements:
         resources = statement["Resource"]
         for resource in resources:
-            if resource.startswith("arn:aws:s3:::"):
-                # Extract part after 'arn:aws:s3:::'
-                part = resource[13:]  # Skip the leading 'arn:aws:s3:::'
-                # Take everything before the first '/' if it exists
-                bucket_name = part.split("/")[0]
+            try:
+                parsed_arn = arnparse(resource)
+                bucket_name = re.sub(r"[^a-zA-Z]+$", "", parsed_arn.resource)
                 bucket_names.add(bucket_name)
+            except Exception:
+                logger.error(f"Cannot parse bucket ARN: {resource}")
     return list(bucket_names)

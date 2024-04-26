@@ -12,7 +12,9 @@ from cloud_guardian.iam_static.graph.identities.role import Role
 from cloud_guardian.iam_static.graph.identities.user import User
 from cloud_guardian.iam_static.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_static.graph.permission.effects import Effect
-from cloud_guardian.iam_static.graph.permission.permission import PermissionFactory
+from cloud_guardian.iam_static.graph.permission.permission import (
+    PermissionFactory,
+)
 
 
 class IAMManager:
@@ -41,8 +43,8 @@ class IAMManager:
         # principal -(permission: effect+action)-> resources
         for statement in statements:
             source_arn = statement["Principal"]["ID"]
+            existing_relationships = self.graph.get_relationships_from_node(source_arn)
 
-            get_identity_or_resource_from_arn(source_arn, self.iam, self.s3)
             for resource_arn in statement["Resource"]:
                 target = get_identity_or_resource_from_arn(
                     resource_arn, self.iam, self.s3
@@ -62,6 +64,10 @@ class IAMManager:
                     )
 
                     # TODO: process (source, target, permission)
+                    # check if these characteristics are already in an existing edge
+                    # (from `existing_relationships`: check source, target, and permission ID)
+                    # if so: remove/update existing relationship
+                    # otherwise: add relationship
 
     def update_node(self, arn: str):
         # get updated info from the IAM client
