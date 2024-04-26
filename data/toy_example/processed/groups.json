@@ -17,7 +17,7 @@
                     "ID": "arn:aws:iam::policy/BasicUserPolicy"
                 }
             ],
-            "ID": "arn:aws:iam::group/BasicUsers"
+            "ID": "arn:aws:iam::123456789012:group/BasicUsers"
         }
     ]
 }

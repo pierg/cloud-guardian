@@ -77,15 +77,15 @@
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::group/BasicUsers"
+                          "ID": "arn:aws:iam::123456789012:group/BasicUsers"
                       },
                       "Action": [
                           "s3:GetObject",
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::company-files",
-                          "arn:aws:s3:::company-files/*"
+                          "arn:aws:s3:: 123456789012:company-files",
+                          "arn:aws:s3:: 123456789012:company-files/*"
                       ]
                   },
                   {
@@ -100,8 +100,8 @@
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::company-files",
-                          "arn:aws:s3:::company-files/*"
+                          "arn:aws:s3:: 123456789012:company-files",
+                          "arn:aws:s3:: 123456789012:company-files/*"
                       ]
                   }
               ]
@@ -114,7 +114,7 @@
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::group/BasicUsers"
+                          "ID": "arn:aws:iam::123456789012:group/BasicUsers"
                       },
                       "Action": [
                           "s3:GetObject",
@@ -122,8 +122,8 @@
                           "s3:PutObject"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::user-files",
-                          "arn:aws:s3:::user-files/*"
+                          "arn:aws:s3:: 123456789012:user-files",
+                          "arn:aws:s3:: 123456789012:user-files/*"
                       ]
                   },
                   {
@@ -138,8 +138,8 @@
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::user-files",
-                          "arn:aws:s3:::user-files/*"
+                          "arn:aws:s3:: 123456789012:user-files",
+                          "arn:aws:s3:: 123456789012:user-files/*"
                       ]
                   }
               ]

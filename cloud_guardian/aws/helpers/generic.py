@@ -1,20 +1,18 @@
+from arnparse import arnparse
 from botocore.exceptions import ClientError
 from cloud_guardian import logger
 
 
 def get_identity_or_resource_from_arn(arn: str, iam=None, s3=None):
     try:
-        parts = arn.split(":")
-        if len(parts) < 6:
-            raise ValueError("Invalid ARN format")
+        parsed_arn = arnparse(arn)
 
-        service = parts[2]  # Service (e.g., s3, iam)
-        resource_part = parts[5]
+        service = parsed_arn.service  # Service (e.g., s3, iam)
+
         # Resource type (e.g., user, role, bucket)
-        resource_type = resource_part.split("/")[0]
-        resource_name = (
-            "/".join(resource_part.split("/")[1:]) if "/" in resource_part else None
-        )
+        resource_type = parsed_arn.resource_type
+
+        resource_name = parsed_arn.resource
 
         if service == "iam" and iam:
             if resource_type == "user":

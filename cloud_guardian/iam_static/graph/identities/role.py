@@ -8,6 +8,18 @@ class Role:
     arn: str
     create_date: datetime
 
+    def __eq__(self, other):
+        if not isinstance(other, Role):
+            return False
+        return (self.name, self.arn, self.create_date) == (
+            other.name,
+            other.arn,
+            other.create_date,
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.arn, self.create_date))
+
     def __str__(self):
         return f"Role Name: {self.name}\nRole ID: {self.role_id}\nARN: {self.arn}\n"
 
