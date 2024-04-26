@@ -12,6 +12,15 @@ def create_group(iam, group_name: str) -> str:
         raise e
 
 
+def get_group(iam, group_name: str) -> dict:
+    try:
+        response = iam.get_group(GroupName=group_name)
+        return response["Group"]
+    except ClientError as e:
+        logger.error(f"Error retrieving group {group_name}: {e}")
+        raise e
+
+
 def delete_group(iam, group_name: str):
     try:
         iam.delete_group(GroupName=group_name)

@@ -49,7 +49,7 @@ def main():
     # Create a new IAM user
     try:
         user_name = "ExampleUser"
-        response = iam.create_user(UserName=user_name)
+        response = iam.create_user_and_access_keys(UserName=user_name)["Arn"]
         user_arn = response["User"]["Arn"]
         print(f"Created IAM User ARN: {user_arn}")
     except Exception as e:

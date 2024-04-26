@@ -16,6 +16,15 @@ def create_role(iam, role_name: str, assume_role_policy: dict) -> str:
         raise e
 
 
+def get_role(iam, role_name: str) -> dict:
+    try:
+        response = iam.get_role(RoleName=role_name)
+        return response["Role"]
+    except ClientError as e:
+        logger.error(f"Error retrieving role {role_name}: {e}")
+        raise e
+
+
 def delete_role(iam, role_name: str):
     try:
         iam.delete_role(RoleName=role_name)
@@ -40,7 +49,7 @@ def get_principals_for_role(iam, role_name: str) -> list[str]:
     try:
         response = iam.get_role(RoleName=role_name)
         policy_document = response["Role"]["AssumeRolePolicyDocument"]
-        # TODO not now:
+        # future_TODO:
         # in real aws policies there is no "ID" key in the Principal object, this is a mockup, ok for now
         principals = [
             statement["Principal"]["ID"] for statement in policy_document["Statement"]

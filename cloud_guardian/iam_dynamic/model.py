@@ -6,11 +6,11 @@ from cloud_guardian.dynamic_model.actions import (
     SupportedActionsFactory,
     supported_actions_ids,
 )
-from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.group import Group
-from cloud_guardian.iam_model.graph.identities.role import Role
-from cloud_guardian.iam_model.graph.identities.services import SupportedService
-from cloud_guardian.iam_model.graph.identities.user import User
+from cloud_guardian.iam_static.graph.graph import IAMGraph
+from cloud_guardian.iam_static.graph.identities.group import Group
+from cloud_guardian.iam_static.graph.identities.role import Role
+from cloud_guardian.iam_static.graph.identities.services import SupportedService
+from cloud_guardian.iam_static.graph.identities.user import User
 
 
 class Parameters(dict):

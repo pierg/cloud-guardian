@@ -3,15 +3,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from cloud_guardian.iam_model.graph.permission.actions import (
+from cloud_guardian.iam_static.graph.permission.actions import (
     ActionsFactory,
     SpecifiedActions,
 )
-from cloud_guardian.iam_model.graph.permission.conditions import (
+from cloud_guardian.iam_static.graph.permission.conditions import (
     ConditionFactory,
     SupportedCondition,
 )
-from cloud_guardian.iam_model.graph.permission.effects import Effect
+from cloud_guardian.iam_static.graph.permission.effects import Effect
 
 
 # the rank of a permission identifies it applies by definition

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Union
 
-from cloud_guardian.iam_model.graph.exceptions import ConditionNotSupported
+from cloud_guardian.iam_static.graph.exceptions import ConditionNotSupported
 
 
 @dataclass(frozen=True)

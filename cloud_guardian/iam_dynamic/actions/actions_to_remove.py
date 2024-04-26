@@ -7,9 +7,9 @@ from typing import List
 import boto3
 
 # Assuming IAMGraph and UserFactory are correctly implemented elsewhere
-from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.user import UserFactory
-from cloud_guardian.iam_model.graph.relationships.relationships import (
+from cloud_guardian.iam_static.graph.graph import IAMGraph
+from cloud_guardian.iam_static.graph.identities.user import UserFactory
+from cloud_guardian.iam_static.graph.relationships.relationships import (
     HasPermissionToResource,
 )
 

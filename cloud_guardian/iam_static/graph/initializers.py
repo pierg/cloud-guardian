@@ -1,9 +1,9 @@
-from cloud_guardian.iam_model.graph.analyzers import connect_graph
-from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.group import GroupFactory
-from cloud_guardian.iam_model.graph.identities.role import RoleFactory
-from cloud_guardian.iam_model.graph.identities.services import ServiceFactory
-from cloud_guardian.iam_model.graph.identities.user import UserFactory
+from cloud_guardian.iam_static.graph.analyzers_to_remove import connect_graph
+from cloud_guardian.iam_static.graph.graph import IAMGraph
+from cloud_guardian.iam_static.graph.identities.group import GroupFactory
+from cloud_guardian.iam_static.graph.identities.role import RoleFactory
+from cloud_guardian.iam_static.graph.identities.services import ServiceFactory
+from cloud_guardian.iam_static.graph.identities.user import UserFactory
 from cloud_guardian.utils.loaders import load_iam_data_into_dictionaries
 from zipp import Path
 

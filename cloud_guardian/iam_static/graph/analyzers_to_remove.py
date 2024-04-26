@@ -2,23 +2,23 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from cloud_guardian.iam_model.graph.graph import IAMGraph
-from cloud_guardian.iam_model.graph.identities.group import GroupFactory
-from cloud_guardian.iam_model.graph.identities.resources import (
+from cloud_guardian.iam_static.graph.graph import IAMGraph
+from cloud_guardian.iam_static.graph.identities.group import GroupFactory
+from cloud_guardian.iam_static.graph.identities.resources import (
     Resource,
     ResourceFactory,
 )
-from cloud_guardian.iam_model.graph.identities.role import RoleFactory
-from cloud_guardian.iam_model.graph.identities.user import UserFactory
-from cloud_guardian.iam_model.graph.permission.actions import ActionsFactory
-from cloud_guardian.iam_model.graph.permission.conditions import SupportedCondition
-from cloud_guardian.iam_model.graph.permission.effects import Effect
-from cloud_guardian.iam_model.graph.permission.permission import (
+from cloud_guardian.iam_static.graph.identities.role import RoleFactory
+from cloud_guardian.iam_static.graph.identities.user import UserFactory
+from cloud_guardian.iam_static.graph.permission.actions import ActionsFactory
+from cloud_guardian.iam_static.graph.permission.conditions import SupportedCondition
+from cloud_guardian.iam_static.graph.permission.effects import Effect
+from cloud_guardian.iam_static.graph.permission.permission import (
     Permission,
     PermissionFactory,
     PermissionRank,
 )
-from cloud_guardian.iam_model.graph.relationships.relationships import (
+from cloud_guardian.iam_static.graph.relationships.relationships import (
     CanAssumeRole,
     HasPermission,
     HasPermissionToResource,

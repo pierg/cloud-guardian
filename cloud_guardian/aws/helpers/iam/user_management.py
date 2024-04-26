@@ -2,13 +2,49 @@ from botocore.exceptions import ClientError
 from cloud_guardian import logger
 
 
-def create_user(iam, user_name: str) -> str:
+def create_user_and_access_keys(iam, user_name: str):
+    """
+    Creates an IAM user and generates access keys for that user.
+
+    Args:
+        iam: An IAM service client instance of boto3.
+        user_name: The name of the user to create.
+
+    Returns:
+        A dictionary containing the user's ARN and access keys, or raises an error.
+
+    Raises:
+        ClientError: An error occurred when attempting to create the user or the access keys.
+    """
     try:
-        response = iam.create_user(UserName=user_name)
-        logger.info(f"User {user_name} created with ARN: {response['User']['Arn']}")
-        return response["User"]["Arn"]
+        # Create the user
+        user_response = iam.create_user(UserName=user_name)
+        user_arn = user_response["User"]["Arn"]
+        logger.info(f"User {user_name} created with ARN: {user_arn}")
+
+        # Create access keys for the user
+        keys_response = iam.create_access_key(UserName=user_name)
+        access_key_id = keys_response["AccessKey"]["AccessKeyId"]
+        secret_access_key = keys_response["AccessKey"]["SecretAccessKey"]
+        logger.info(f"Access keys created for user {user_name}")
+
+        return {
+            "Arn": user_arn,
+            "AccessKeyId": access_key_id,
+            "SecretAccessKey": secret_access_key,
+        }
+
     except ClientError as e:
-        logger.error(f"Error creating user {user_name}: {e}")
+        logger.error(f"Error in creating user {user_name} or access keys: {e}")
+        raise
+
+
+def get_user(iam, user_name: str) -> dict:
+    try:
+        response = iam.get_user(UserName=user_name)
+        return response["User"]
+    except ClientError as e:
+        logger.error(f"Error retrieving ARN for user {user_name}: {e}")
         raise e
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from cloud_guardian.iam_model.graph.graph import IAMGraph
+from cloud_guardian.iam_static.graph.graph import IAMGraph
 from loguru import logger
 
 
