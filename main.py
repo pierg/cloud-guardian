@@ -61,5 +61,6 @@ trace_4 = {
         "policy_name": "AdminPolicy",
     },
 }
+dynamic_model.step_from_dict(trace_4)
 
 mock.stop()

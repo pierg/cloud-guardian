@@ -6,6 +6,7 @@ from typing import List
 from cloud_guardian.aws.helpers.iam.policy_management import (
     attach_policy_to_user,
     create_policy,
+    get_policy_from_name,
 )
 from cloud_guardian.aws.helpers.iam.user_management import (
     create_user_and_access_keys,
@@ -71,7 +72,7 @@ class CreatePolicy(SupportedAction):
         }
 
         policy_arn = create_policy(aws_manager.iam, policy_name, policy_document)
-        
+
         iam_manager.update_permissions_to_node(policy_arn, policy_document)
 
         return policy_arn
@@ -87,11 +88,12 @@ class AttachUserPolicy(SupportedAction):
         self,
         aws_manager: AWSManager,
         iam_manager: IAMManager,
-        policy_arn: str,
         user_name: str,
+        policy_name: str,
     ) -> None:
+        policy_arn = get_policy_from_name(aws_manager.iam, policy_name)["PolicyArn"]
         attach_policy_to_user(aws_manager.iam, policy_arn, user_name)
-        user_arn = get_user(user_name)["Arn"]
+        user_arn = get_user(aws_manager.iam, user_name)
         iam_manager.update_permissions_to_node(policy_arn, user_arn)
 
 
