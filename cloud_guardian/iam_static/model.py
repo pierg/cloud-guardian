@@ -26,6 +26,7 @@ class IAMManager:
         # 1 - get the identity info from aws, 2 - create/update in the graph
         get_identity_or_resource_from_arn(arn, self.iam, self.s3)
         # ...
+        pass
 
     def update_permissions_to_node(self, policy_document: dict, arn: str):
         # TODO

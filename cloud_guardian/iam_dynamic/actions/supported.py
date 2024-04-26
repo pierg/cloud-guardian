@@ -40,7 +40,7 @@ class CreateUser(SupportedAction):
     ) -> None:
         user_info = create_user_and_access_keys(aws_manager.iam, user_name)
 
-        iam_manager.update_identity(identity_arn=user_info["Arn"])
+        iam_manager.update_node(arn=user_info["Arn"])
 
 
 @dataclass(frozen=True)
@@ -57,15 +57,23 @@ class CreatePolicy(SupportedAction):
         actions: List[str],
         resource: str = "*",
     ) -> str:
-        policy_document = json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {"Effect": "Allow", "Action": actions, "Resource": resource}
-                ],
-            }
-        )
+
+        # Construct policy document
+        policy_document = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": actions,
+                    "Resource": resource
+                }
+            ]
+        }
+
         policy_arn = create_policy(aws_manager.iam, policy_name, policy_document)
+        
+        iam_manager.update_permissions_to_node(policy_arn, policy_document)
+
         return policy_arn
 
 

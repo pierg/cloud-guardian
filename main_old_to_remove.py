@@ -1,5 +1,5 @@
-from cloud_guardian.dynamic_model.actions import AttachUserPolicy
-from cloud_guardian.dynamic_model.model import IAMGraphMDP, Parameters
+from cloud_guardian.iam_dynamic.actions.supported import AttachUserPolicy
+from cloud_guardian.iam_dynamic.model import IAMGraphMDP, Parameters
 from cloud_guardian.iam_static.graph.initializers import create_graph
 from cloud_guardian.iam_static.graph.plotting import save_graph_pdf
 from cloud_guardian.utils.shared import data_path, output_path

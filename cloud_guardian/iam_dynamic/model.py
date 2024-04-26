@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union
 
-from cloud_guardian.dynamic_model.actions import (
+from cloud_guardian.aws.manager import AWSManager
+from cloud_guardian.iam_dynamic.actions.supported import (
     SupportedAction,
     SupportedActionsFactory,
     supported_actions_ids,
@@ -11,7 +12,8 @@ from cloud_guardian.iam_static.graph.identities.group import Group
 from cloud_guardian.iam_static.graph.identities.role import Role
 from cloud_guardian.iam_static.graph.identities.services import SupportedService
 from cloud_guardian.iam_static.graph.identities.user import User
-
+from cloud_guardian.iam_static.model import IAMManager
+from cloud_guardian import logger
 
 class Parameters(dict):
     """Extends dictionary to provide additional functionality or validation if necessary."""
@@ -37,7 +39,7 @@ class Transition:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "entity": self.entity.id,
+            "entity": self.entity.name,
             "action": self.action.aws_action_id,
             "parameters": self.parameters.to_dict(),
         }
@@ -55,7 +57,8 @@ class Transition:
 
 @dataclass
 class IAMGraphMDP:
-    graph: IAMGraph
+    iam_manager: IAMManager
+    aws_manager: AWSManager
     trace: List[Transition] = field(default_factory=list)
 
     def step(
@@ -64,17 +67,15 @@ class IAMGraphMDP:
         action_id: str,
         parameters: Parameters,
     ):
-        """
-        An entity performs an action, applying it directly to the graph and recording the transition.
-        """
-
         # Apply action on the graph
-        print(f"Applying action {action_id} with parameters {parameters}")
+        logger.info(
+            f"Applying action {action_id} to entity {entity} with parameters {parameters}"
+        )
 
         # Use the factory to create the appropriate action
         action = SupportedActionsFactory.get_action_by_id(action_id)
 
-        action.apply(graph=self.graph, **parameters)
+        action.apply(self.aws_manager, self.iam_manager, **parameters)
 
         # Record the transition
         transition = Transition(entity=entity, action=action, parameters=parameters)
@@ -92,7 +93,9 @@ class IAMGraphMDP:
     def step_from_dict(self, transition_data: Dict[str, Any]):
         action_id = transition_data["action"]
         parameters = Parameters.from_dict(transition_data["parameters"])
-        entity = self.graph.get_entity_by_id(transition_data["entity"])
+        # entity = self.iam_manager.graph.get_entity_by_name(transition_data["entity"])
+        # TODO: remove after TODOs are done
+        entity = "arn:aws:iam::123456789012:user/Eve"
         self.step(entity, action_id, parameters)
 
     def execute_trace(self, trace: dict):
@@ -110,7 +113,7 @@ class IAMGraphMDP:
         Returns a list of all actions that can be applied to the current graph state.
         """
 
-        relationships = self.graph.get_relationships_from_node(
+        relationships = self.iam_manager.graph.get_relationships_from_node(
             node_id, filter_types=["permission"]
         )
         supported_actions = []
@@ -120,7 +123,7 @@ class IAMGraphMDP:
                     supported_actions_ids
                 )
             )
-        if self.graph.get_relationships_from_node(
+        if self.iam_manager.graph.get_relationships_from_node(
             node_id, filter_types=["can_assume_role"]
         ):
             supported_actions.extend("AssumeRole")
