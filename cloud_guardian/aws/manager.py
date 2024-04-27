@@ -14,14 +14,14 @@ from cloud_guardian.aws.helpers.iam.user_management import (
     add_user_to_group,
     create_user_and_access_keys,
 )
-from cloud_guardian.aws.helpers.s3.bucket_operations import create_bucket
+from cloud_guardian.aws.helpers.s3.bucket_operations import create_bucket, get_bucket_arn
 from cloud_guardian.aws.helpers.s3.bucket_policy import set_bucket_policy
 from cloud_guardian.utils.loaders import (
     extract_bucket_names,
     load_iam_data_into_dictionaries,
 )
-from cloud_guardian.utils.maps import BiMap
-from cloud_guardian.utils.strings import get_name_from_arn
+from cloud_guardian.utils.maps import BiMap, get_all_principals_ids, get_all_resources_ids, substitute_values
+from cloud_guardian.utils.strings import get_name_and_type_from_id, strip_s3_resource_id
 
 
 class AWSManager:
@@ -93,13 +93,13 @@ class AWSManager:
 
         # Create identity-based policies and attach them to the identities
         for policy in policies_dict["IdentityBasedPolicies"]:
-            policy_name = get_name_from_arn(policy["ID"])
+            policy_name = get_name_and_type_from_id(policy["ID"])[0]
             policy_arn = create_policy(self.iam, policy_name, policy["PolicyDocument"])
             bi_map.add(policy_arn, policy["ID"])
 
         # Create groups and attach policies
         for group in groups_dict["Groups"]:
-            group_name = get_name_from_arn(group["ID"])
+            group_name = get_name_and_type_from_id(group["ID"])[0]
             group_arn = create_group(self.iam, group_name)
             bi_map.add(group_arn, group["ID"])
             for policy in group["AttachedPolicies"]:
@@ -108,7 +108,7 @@ class AWSManager:
 
         # Create users, attach policies
         for user in users_dict["Users"]:
-            user_name = get_name_from_arn(user["ID"])
+            user_name = get_name_and_type_from_id(user["ID"])[0]
             user_info = create_user_and_access_keys(self.iam, user_name)
             user_arn = user_info["Arn"]
             self.credentials[user_arn] = (
@@ -122,14 +122,14 @@ class AWSManager:
 
         # Add users to groups
         for group in groups_dict["Groups"]:
-            group_name = get_name_from_arn(group["ID"])
+            group_name = get_name_and_type_from_id(group["ID"])[0]
             for user in group["Users"]:
-                user_name = get_name_from_arn(bi_map.get(user["ID"]))
+                user_name = get_name_and_type_from_id(bi_map.get(user["ID"]))[0]
                 add_user_to_group(self.iam, user_name, group_name)
 
         # Create roles and attach policies
         for role in roles_dict["Roles"]:
-            role_name = get_name_from_arn(role["ID"])
+            role_name = get_name_and_type_from_id(role["ID"])[0]
             role_arn = create_role(
                 self.iam, role_name, role["AssumeRolePolicyDocument"]
             )
@@ -137,9 +137,43 @@ class AWSManager:
 
         # # Process resource-based policies
         for policy in policies_dict["ResourceBasedPolicies"]:
-            for resource_name in extract_bucket_names(policy):
-                create_bucket(self.s3, resource_name)
-                set_bucket_policy(self.s3, resource_name, policy["PolicyDocument"])
+            principals = get_all_principals_ids(policy)
+            for principal_id in principals:
+                principal_arn = bi_map.get(principal_id)
+                if principal_arn is None:
+                    logger.warning(f"Principal {principal_id} not found in BiMap. Creating identity now...")
+                    principal_name, principal_type = get_name_and_type_from_id(principal_id)
+                    logger.info(f"Creating {principal_type} {principal_name}")
+                    if principal_type == "user":
+                        principal_info = create_user_and_access_keys(self.iam, principal_name)["Arn"]
+                        principal_arn = principal_info["Arn"]
+                        self.credentials[principal_arn] = (
+                            principal_info["AccessKeyId"],
+                            principal_info["SecretAccessKey"],
+                        )
+                        bi_map.add(user_arn, user["ID"])
+                    elif principal_type == "group":
+                        principal_arn = create_group(self.iam, principal_name)
+                    elif principal_type == "role":
+                        principal_arn = create_role(self.iam, principal_name, {})
+                    else:
+                        raise ValueError("Principal type not recognized.")
+                    bi_map.add(principal_id, principal_arn)\
+                    
+            resources_ids = get_all_resources_ids(policy)
+            for resource_id in resources_ids:
+                resource_id = strip_s3_resource_id(resource_id)
+                if bi_map.get(resource_id) is None:
+                    resource_name, resource_type = get_name_and_type_from_id(resource_id)
+                    if resource_type == "s3":
+                        bucket_name = create_bucket(self.s3, resource_name)
+                        bucket_arn = get_bucket_arn(bucket_name)
+                        bi_map.add(bucket_arn, strip_s3_resource_id(resource_id))
+                    else:
+                        raise ValueError("Resource type not recognized.")
+                    
+            new_policy_dict = substitute_values(policy, bi_map)
+            set_bucket_policy(self.s3, resource_name, new_policy_dict)
 
     def export_to_json(self, folder_path: Path):
         pass

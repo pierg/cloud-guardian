@@ -2,26 +2,26 @@
   "Groups": [
     {
       "GroupName": "BasicUsers",
-      "GroupArn": "arn:aws:iam::123456789012:group/BasicUsers",
+      "GroupArn": "custom_id___custom__:group/BasicUsers",
       "CreateDate": "2023-01-01T12:00:00Z",
       "Users": [
         {
           "UserName": "Eve",
-          "UserArn": "arn:aws:iam::user/Eve"
+          "UserArn": "custom_id_user/Eve"
         },
         {
           "UserName": "Alice",
-          "UserArn": "arn:aws:iam::user/Alice"
+          "UserArn": "custom_id_user/Alice"
         },
         {
           "UserName": "Bob",
-          "UserArn": "arn:aws:iam::user/Bob"
+          "UserArn": "custom_id_user/Bob"
         }
       ],
       "AttachedPolicies": [
         {
           "PolicyName": "BasicUserPolicy",
-          "PolicyArn": "arn:aws:iam::policy/BasicUserPolicy"
+          "PolicyArn": "custom_id_policy/BasicUserPolicy"
         }
       ]
     }

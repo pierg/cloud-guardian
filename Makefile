@@ -22,3 +22,4 @@ clean:
 
 reset: clean
 	rm -rf .venv
+	rm poetry.lock

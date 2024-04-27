@@ -2,7 +2,7 @@
   "Roles": [
       {
           "RoleName": "SuperUserRole",
-          "RoleArn": "arn:aws:iam::role/SuperUserRole",
+          "RoleArn": "custom_id_role/SuperUserRole",
           "CreateDate": "2023-01-01T12:00:00Z",
           "AssumeRolePolicyDocument": {
               "Version": "2012-10-17",
@@ -10,7 +10,7 @@
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "AWS": "arn:aws:iam::user/Admin"
+                          "AWS": "custom_id_user/Admin"
                       },
                       "Action": "sts:AssumeRole"
                   }

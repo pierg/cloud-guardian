@@ -3,21 +3,21 @@
         {
             "Users": [
                 {
-                    "ID": "arn:aws:iam::user/Eve"
+                    "ID": "custom_id_user/Eve"
                 },
                 {
-                    "ID": "arn:aws:iam::user/Alice"
+                    "ID": "custom_id_user/Alice"
                 },
                 {
-                    "ID": "arn:aws:iam::user/Bob"
+                    "ID": "custom_id_user/Bob"
                 }
             ],
             "AttachedPolicies": [
                 {
-                    "ID": "arn:aws:iam::policy/BasicUserPolicy"
+                    "ID": "custom_id_policy/BasicUserPolicy"
                 }
             ],
-            "ID": "arn:aws:iam::123456789012:group/BasicUsers"
+            "ID": "custom_id___custom__:group/BasicUsers"
         }
     ]
 }

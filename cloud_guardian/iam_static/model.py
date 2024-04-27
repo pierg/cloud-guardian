@@ -15,6 +15,7 @@ from cloud_guardian.iam_static.graph.permission.effects import Effect
 from cloud_guardian.iam_static.graph.permission.permission import (
     PermissionFactory,
 )
+from cloud_guardian.utils.strings import pretty_print
 
 
 class IAMManager:
@@ -37,7 +38,12 @@ class IAMManager:
         # get all policy statements
         statements = []
         for bucket in list_buckets(self.s3):
-            statements.extend(get_bucket_policy(self.s3, bucket["name"])["Statement"])
+            pretty_print(bucket)
+            pretty_print(get_bucket_policy(self.s3, bucket["name"]))
+            # TODO: fix
+            policy_document = get_bucket_policy(self.s3, bucket["name"])
+            for statement in policy_document["Statement"]:
+                statements.append(statement)
 
         # TODO: process the statements one by one to update the graph
         # principal -(permission: effect+action)-> resources
@@ -46,6 +52,7 @@ class IAMManager:
             existing_relationships = self.graph.get_relationships_from_node(source_arn)
 
             for resource_arn in statement["Resource"]:
+                print(resource_arn)
                 target = get_identity_or_resource_from_arn(
                     resource_arn, self.iam, self.s3
                 )

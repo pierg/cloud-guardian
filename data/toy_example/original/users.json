@@ -2,39 +2,39 @@
   "Users": [
     {
       "UserName": "Alice",
-      "UserArn": "arn:aws:iam::user/Alice",
+      "UserArn": "custom_id_user/Alice",
       "CreateDate": "2023-01-01T12:00:00Z",
       "AttachedPolicies": [
         {
           "PolicyName": "AdvancedUserPolicy",
-          "PolicyArn": "arn:aws:iam::policy/AdvancedUserPolicy"
+          "PolicyArn": "custom_id_policy/AdvancedUserPolicy"
         }
       ]
     },
     {
       "UserName": "Bob",
-      "UserArn": "arn:aws:iam::user/Bob",
+      "UserArn": "custom_id_user/Bob",
       "CreateDate": "2023-01-01T12:00:00Z",
       "AttachedPolicies": [
         {
           "PolicyName": "BasicUserPolicy",
-          "PolicyArn": "arn:aws:iam::policy/AdvancedUserPolicy"
+          "PolicyArn": "custom_id_policy/AdvancedUserPolicy"
         }
       ]
     },
     {
       "UserName": "Eve",
-      "UserArn": "arn:aws:iam::user/Eve",
+      "UserArn": "custom_id_user/Eve",
       "CreateDate": "2023-01-01T12:00:00Z"
     },
     {
       "UserName": "Admin",
-      "UserArn": "arn:aws:iam::user/Admin",
+      "UserArn": "custom_id_user/Admin",
       "CreateDate": "2023-01-01T12:00:00Z",
       "AttachedPolicies": [
         {
           "PolicyName": "AdminAccess",
-          "PolicyArn": "arn:aws:iam::policy/AdminAccess"
+          "PolicyArn": "custom_id_policy/AdminAccess"
         }
       ]
     }

@@ -7,13 +7,13 @@
                     {
                         "Effect": "Allow",
                         "Principal": {
-                            "ID": "arn:aws:iam::user/Admin"
+                            "AWS": "custom_id_user/Admin"
                         },
                         "Action": "sts:AssumeRole"
                     }
                 ]
             },
-            "ID": "arn:aws:iam::role/SuperUserRole"
+            "ID": "custom_id_role/SuperUserRole"
         }
     ]
 }
