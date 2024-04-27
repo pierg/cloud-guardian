@@ -40,8 +40,7 @@ class IAMManager:
         for bucket in list_buckets(self.s3):
             pretty_print(bucket)
             pretty_print(get_bucket_policy(self.s3, bucket["name"]))
-            # TODO: fix
-            policy_document = get_bucket_policy(self.s3, bucket["name"])
+            policy_document = get_bucket_policy(self.s3, bucket["name"])["PolicyDocument"]
             for statement in policy_document["Statement"]:
                 statements.append(statement)
 
