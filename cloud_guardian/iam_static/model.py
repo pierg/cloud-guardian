@@ -16,6 +16,10 @@ from cloud_guardian.iam_static.graph.permission.permission import (
     PermissionFactory,
 )
 from cloud_guardian.utils.strings import pretty_print
+from cloud_guardian.iam_static.graph.identities.resources import (
+    Resource,
+    ResourceFactory,
+)
 
 
 class IAMManager:
@@ -40,7 +44,9 @@ class IAMManager:
         for bucket in list_buckets(self.s3):
             pretty_print(bucket)
             pretty_print(get_bucket_policy(self.s3, bucket["name"]))
-            policy_document = get_bucket_policy(self.s3, bucket["name"])["PolicyDocument"]
+            policy_document = get_bucket_policy(self.s3, bucket["name"])[
+                "PolicyDocument"
+            ]
             for statement in policy_document["Statement"]:
                 statements.append(statement)
 
@@ -51,8 +57,19 @@ class IAMManager:
             existing_relationships = self.graph.get_relationships_from_node(source_arn)
 
             for resource_arn in statement["Resource"]:
-                print(resource_arn)
-                target = get_identity_or_resource_from_arn(
+                # FIXME: invalid custom ARN:
+                # "arnparse.arnparse.MalformedArnError: arn_str: custom_id___custom__:group/BasicUsers"
+                #
+                # source_dict = get_identity_or_resource_from_arn(
+                #     source_arn, self.iam, self.s3
+                # )
+
+                # FIXME: transform the `ResponseMetadata` object in a Resource object (no apparent link)
+                # example of data returned by `get_identity_or_resource_from_arn`:
+                # {'ResponseMetadata': {'RequestId': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W'}, 'RetryAttempts': 0}, 'Owner': {'DisplayName': 'webfile', 'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a'}, 'Grants': [{'Grantee': {'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a', 'Type': 'CanonicalUser'}, 'Permission': 'FULL_CONTROL'}]}
+                #
+                # As a consequence, the target object cannot be retrieved from the Resource factory
+                target_dict = get_identity_or_resource_from_arn(
                     resource_arn, self.iam, self.s3
                 )
 
