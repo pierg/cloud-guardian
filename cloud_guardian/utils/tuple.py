@@ -8,25 +8,31 @@ from cloud_guardian import logger
 from cloud_guardian.iam_static.graph.permission.effects import Effect
 
 
+class EntityType(Enum):
+    SOURCE = "source"
+    TARGET = "target"
+
+
 class SourceType(Enum):
-    USER = ("user",)
-    GROUP = ("group",)
+    USER = "user"
+    GROUP = "group"
     ROLE = "role"
 
 
 class TargetType(Enum):
-    S3 = ("s3",)
+    S3 = "s3"
     POSTGRESQL = "postgresql"
 
 
 class Entity:
-    def __init__(self, entity_type, name, id):
+    def __init__(self, entity_type, entity_category, name, id):
         self.entity_type = entity_type
+        self.entity_category = entity_category
         self.name = name
         self.id = id
 
     def __str__(self):
-        return f"{self.name} {self.id} ({self.entity_type.name})"
+        return f"{self.name} {self.id} ({self.entity_type.name}/{self.entity_category.name})"
 
 
 class Permission:
@@ -56,7 +62,9 @@ class TupleRepresentation:
             "role": SourceType.ROLE,
         }
         self.source = (
-            Entity(source_mapping.get(source_type), source, source_id)
+            Entity(
+                source_mapping.get(source_type), EntityType.SOURCE, source, source_id
+            )
             if source_type in source_mapping
             else logger.error(f"cannot parse source {source_type}")
         )
@@ -69,7 +77,12 @@ class TupleRepresentation:
         target_mapping.update(source_mapping)
 
         self.target = (
-            Entity(target_mapping.get(destination_type), destination, destination_id)
+            Entity(
+                target_mapping.get(destination_type),
+                EntityType.TARGET,
+                destination,
+                destination_id,
+            )
             if destination_type in target_mapping
             else logger.error(f"cannot parse target {destination_type}")
         )
@@ -116,14 +129,19 @@ for policy in policies:
 
     permissions_mapping[policy.source][policy.target].append(policy.permission)
 
-# display mapping for debugging purposes
-for source, v in permissions_mapping.items():
-    print(source, "->", end=" ")
-    for target, permissions in v.items():
-        print(target, ":", end=" ")
-        for permission in permissions:
-            print(permission, " ", end="")
-        print()
+# groups
+groups_mapping = {}  # group id -> users belonging to this group
+
+for policy in policies:
+    policy_id = policy.source.id
+    for group in {
+        policy for policy in policies if policy.source.entity_type == SourceType.GROUP
+    }:
+        if policy_id in group.source.id:
+            groups_mapping.setdefault(group.source.id, set()).add(policy.source)
+        if policy_id in group.target.id:
+            groups_mapping.setdefault(group.target.id, set()).add(policy.source)
+
 
 # Assuming 'permission' is one of the columns in the DataFrame
 # Get unique entries in the 'permission' column
