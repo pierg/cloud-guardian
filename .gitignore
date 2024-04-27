@@ -38,7 +38,7 @@ poetry.lock
 *.spec
 
 output/
-data/sensitive
+data/sensitive/
 
 
 # Installer logs
