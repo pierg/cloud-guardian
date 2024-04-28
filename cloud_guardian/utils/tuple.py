@@ -138,19 +138,6 @@ for policy in policies:
 
     permissions_mapping[policy.source][policy.target].append(policy.permission)
 
-# groups
-groups_mapping = {}  # group id -> users belonging to this group
-unique_groups = [
-    policy for policy in policies if policy.source.entity_type == SourceType.GROUP
-]
-for policy in policies:
-    policy_id = policy.source.id
-    for group in unique_groups:
-        if policy_id in group.source.id:
-            groups_mapping.setdefault(group.source.id, set()).add(policy.source)
-        if policy_id in group.target.id:
-            groups_mapping.setdefault(group.target.id, set()).add(policy.source)
-
 
 # Assuming 'permission' is one of the columns in the DataFrame
 # Get unique entries in the 'permission' column
@@ -213,7 +200,7 @@ for source, v in permissions_mapping.items():
                         {
                             "Effect": effect.value,
                             "Action": [
-                                [permission.permission for permission in permissions],
+                                permission.permission for permission in permissions
                             ],
                             "Resource": f"{target.id}/{target.name}",
                         }
@@ -224,9 +211,9 @@ for source, v in permissions_mapping.items():
         )
 
         if source.id not in users_mapping:
-            users_mapping[source] = []
+            users_mapping[source] = set()
 
-        users_mapping[source].append(policy_id)
+        users_mapping[source].add(policy_id)
 
 save_generated_json("IdentityBasedPolicies", all_policies, "policies.json")
 
@@ -254,3 +241,71 @@ for user, policy_ids in users_mapping.items():
     )
 
 save_generated_json("Users", all_users, "users.json")
+
+# GROUPS.JSON
+#
+groups_mapping = {}  # group id -> users belonging to this group
+unique_groups = {
+    policy.source.id
+    for policy in policies
+    if policy.source.entity_type == SourceType.GROUP
+}
+
+for policy in policies:
+    for entity in [policy.source, policy.target]:
+        if entity.entity_type != SourceType.GROUP and entity.id in unique_groups:
+            groups_mapping.setdefault(entity.id, set()).add(entity)
+
+all_groups = []
+for group_id, entities in groups_mapping.items():
+    group_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+
+    users = [{"ID": f"{entity.id}/{entity.name}"} for entity in entities]
+
+    attached_policies = []
+    for entity in entities:
+        attached_policies.extend(
+            [{"ID": permission} for permission in users_mapping.get(entity, [])]
+        )
+
+    all_groups.append(
+        {"Users": users, "AttachedPolicies": attached_policies, "ID": group_id}
+    )
+
+
+save_generated_json("Groups", all_groups, "groups.json")
+
+
+# ROLES.JSON
+#
+unique_roles = {
+    policy.source.id
+    for policy in policies
+    if policy.source.entity_type == SourceType.ROLE
+}
+
+
+all_roles = []
+for policy in policies:
+    if policy.source.id in unique_roles:
+        role_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+
+        all_roles.append(
+            {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",  # ! this information cannot be inferred from the original data
+                    "Statement": [
+                        {
+                            "Effect": policy.permission.effect.value,
+                            "Principal": {
+                                "AWS": f"{policy.source.id}/{policy.source.name}"
+                            },
+                            "Action": policy.permission.permission,
+                        }
+                    ],
+                },
+                "ID": role_id,
+            }
+        )
+
+save_generated_json("Roles", all_roles, "roles.json")
