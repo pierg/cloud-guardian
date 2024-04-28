@@ -2,10 +2,11 @@ from cloud_guardian.utils.shared import data_path
 import joblib
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import json
 from enum import Enum
 from cloud_guardian import logger
 from cloud_guardian.iam_static.graph.permission.effects import Effect
+import uuid
 
 
 class EntityType(Enum):
@@ -93,6 +94,14 @@ class TupleRepresentation:
         )
 
 
+def save_generated_json(main_key, json_data, filename):
+    output_directory = data_path / "toy_example" / "generated"
+
+    file_path = output_directory / filename
+    with open(file_path, "w") as json_file:
+        json_file.write(json.dumps({main_key: json_data}, indent=4))
+
+
 data_file = data_path / "sensitive" / "ds_4_tuples.joblib"
 
 data = joblib.load(data_file)
@@ -131,12 +140,12 @@ for policy in policies:
 
 # groups
 groups_mapping = {}  # group id -> users belonging to this group
-
+unique_groups = [
+    policy for policy in policies if policy.source.entity_type == SourceType.GROUP
+]
 for policy in policies:
     policy_id = policy.source.id
-    for group in {
-        policy for policy in policies if policy.source.entity_type == SourceType.GROUP
-    }:
+    for group in unique_groups:
         if policy_id in group.source.id:
             groups_mapping.setdefault(group.source.id, set()).add(policy.source)
         if policy_id in group.target.id:
@@ -166,3 +175,82 @@ print("\n".join(permissions_set))
 
 def create_jsons_from_tuple(data, output_folder):
     """Create the json structure as in "toy/example/processed"""
+
+
+def get_effect(permissions):
+    effects = {
+        permission.effect for permission in permissions
+    }  # Set comprehension to get unique effects
+
+    if len(effects) == 1:
+        return effects.pop()  # If all effects are the same, return one of them
+    else:
+        raise ValueError("Permissions have different effects")
+
+
+# POLICIES.JSON
+#
+# The policies are inferred from the pairs (source, target)
+all_policies = []
+
+# user ID -> policy IDs
+users_mapping = {}
+
+for source, v in permissions_mapping.items():
+    for target, permissions in v.items():
+        try:
+            effect = get_effect(permissions)
+        except ValueError as e:
+            print("Error:", e)
+
+        policy_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+
+        all_policies.append(
+            {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",  # ! this information cannot be inferred from the original data
+                    "Statement": [
+                        {
+                            "Effect": effect.value,
+                            "Action": [
+                                [permission.permission for permission in permissions],
+                            ],
+                            "Resource": f"{target.id}/{target.name}",
+                        }
+                    ],
+                },
+                "ID": policy_id,
+            }
+        )
+
+        if source.id not in users_mapping:
+            users_mapping[source] = []
+
+        users_mapping[source].append(policy_id)
+
+save_generated_json("IdentityBasedPolicies", all_policies, "policies.json")
+
+
+# USERS.JSON
+#
+all_users = []
+for user, policy_ids in users_mapping.items():
+    attached_policies = []
+
+    for policy_id in policy_ids:
+        attached_policies.append(
+            {
+                "ID": policy_id,
+            }
+        )
+
+    all_users.append(
+        {
+            "AttachedPolicies": [
+                attached_policies,
+            ],
+            "ID": f"{user.id}/{user.name}",
+        }
+    )
+
+save_generated_json("Users", all_users, "users.json")

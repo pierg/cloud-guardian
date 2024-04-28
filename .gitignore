@@ -39,6 +39,7 @@ poetry.lock
 
 output/
 data/sensitive/
+data/toy_example/generated/
 
 
 # Installer logs
