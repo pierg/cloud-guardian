@@ -7,19 +7,15 @@ from cloud_guardian.aws.helpers.s3.bucket_policy import get_bucket_policy
 from cloud_guardian.aws.manager import AWSManager
 from cloud_guardian.iam_static.graph.graph import IAMGraph
 from cloud_guardian.iam_static.graph.identities.group import Group
-from cloud_guardian.iam_static.graph.identities.resources import Resource
+from cloud_guardian.iam_static.graph.identities.resources import (
+    Resource,
+)
 from cloud_guardian.iam_static.graph.identities.role import Role
 from cloud_guardian.iam_static.graph.identities.user import User
 from cloud_guardian.iam_static.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_static.graph.permission.effects import Effect
-from cloud_guardian.iam_static.graph.permission.permission import (
-    PermissionFactory,
-)
+from cloud_guardian.iam_static.graph.permission.permission import PermissionFactory
 from cloud_guardian.utils.strings import pretty_print
-from cloud_guardian.iam_static.graph.identities.resources import (
-    Resource,
-    ResourceFactory,
-)
 
 
 class IAMManager:
@@ -54,7 +50,7 @@ class IAMManager:
         # principal -(permission: effect+action)-> resources
         for statement in statements:
             source_arn = statement["Principal"]["ID"]
-            existing_relationships = self.graph.get_relationships_from_node(source_arn)
+            self.graph.get_relationships_from_node(source_arn)
 
             for resource_arn in statement["Resource"]:
                 # FIXME: invalid custom ARN:

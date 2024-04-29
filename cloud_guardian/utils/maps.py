@@ -1,6 +1,7 @@
-import json
+
 from cloud_guardian import logger
 from cloud_guardian.utils.strings import strip_s3_resource_id
+
 
 class BiMap:
     def __init__(self):
@@ -17,9 +18,13 @@ class BiMap:
             )
         if key in self.map:
             if self.map[key] != value:
-                raise ValueError(f"Cannot add key {key} with a {value}; existing value is different ({self.map[key]}).")
+                raise ValueError(
+                    f"Cannot add key {key} with a {value}; existing value is different ({self.map[key]})."
+                )
             else:
-                logger.info(f"Ignoring addition of existing key-value pair {key} -> {value}")
+                logger.info(
+                    f"Ignoring addition of existing key-value pair {key} -> {value}"
+                )
         else:
             logger.info(f"Adding {key} -> {value}")
             self.map[key] = value
@@ -36,7 +41,9 @@ class BiMap:
 
     def get(self, key):
         if not isinstance(key, (int, str, float, tuple)):
-            raise ValueError(f"Key must be a hashable type. Received {type(key).__name__} which is not.")
+            raise ValueError(
+                f"Key must be a hashable type. Received {type(key).__name__} which is not."
+            )
         return self.map.get(key) or self.reverse_map.get(key)
 
     def contains(self, key):
@@ -50,10 +57,18 @@ class BiMap:
 
 
 def get_all_principals_ids(policy_dict: dict) -> list[str]:
-    return [statement["Principal"]["ID"] for statement in policy_dict["PolicyDocument"]["Statement"]]
+    return [
+        statement["Principal"]["ID"]
+        for statement in policy_dict["PolicyDocument"]["Statement"]
+    ]
+
 
 def get_all_resources_ids(policy_dict: dict) -> list[str]:
-    return [resource for statement in policy_dict["PolicyDocument"]["Statement"] for resource in statement["Resource"]]
+    return [
+        resource
+        for statement in policy_dict["PolicyDocument"]["Statement"]
+        for resource in statement["Resource"]
+    ]
 
 
 def substitute_values(data: dict, mapping: BiMap) -> dict:
@@ -61,6 +76,7 @@ def substitute_values(data: dict, mapping: BiMap) -> dict:
     Recursively substitute values in a dictionary using provided mapping.
     If they exist in the mapping, modify them by appending necessary suffixes.
     """
+
     def recurse(item):
         if isinstance(item, dict):
             # Handle dictionary recursively
@@ -73,7 +89,8 @@ def substitute_values(data: dict, mapping: BiMap) -> dict:
             base_id = strip_s3_resource_id(item)
             if mapping.contains(base_id):
                 # Replace base id and append any suffix from the original string
-                suffix = item[len(base_id):]  # Capture the remaining suffix after the base id
+                # Capture the remaining suffix after the base id
+                suffix = item[len(base_id) :]
                 return mapping.get(base_id) + suffix
             else:
                 return item

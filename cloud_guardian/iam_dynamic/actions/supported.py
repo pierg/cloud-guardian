@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
@@ -62,13 +61,7 @@ class CreatePolicy(SupportedAction):
         # Construct policy document
         policy_document = {
             "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": actions,
-                    "Resource": resource
-                }
-            ]
+            "Statement": [{"Effect": "Allow", "Action": actions, "Resource": resource}],
         }
 
         policy_arn = create_policy(aws_manager.iam, policy_name, policy_document)

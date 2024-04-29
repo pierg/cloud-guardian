@@ -1,7 +1,6 @@
 from arnparse import arnparse
 from botocore.exceptions import ClientError
 from cloud_guardian import logger
-from cloud_guardian.utils.strings import strip_s3_resource_id
 from cloud_guardian.aws.helpers.s3.bucket_operations import get_bucket
 
 

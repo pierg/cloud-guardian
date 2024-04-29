@@ -142,12 +142,16 @@ class IAMGraph:
         if node_data is None:
             return None
         return node_data.get("instance")
-    
+
     def get_entity_by_name(
         self, name: str
     ) -> Union[User, Group, Role, Resource, SupportedService]:
         """Get an entity from the graph by its name, if not unique, raise an error."""
-        nodes = [data["instance"] for _, data in self.graph.nodes(data=True) if data["instance"].name == name]
+        nodes = [
+            data["instance"]
+            for _, data in self.graph.nodes(data=True)
+            if data["instance"].name == name
+        ]
         if len(nodes) == 0:
             raise ValueError(f"No entity with name {name} found in the graph")
         elif len(nodes) > 1:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union
 
+from cloud_guardian import logger
 from cloud_guardian.aws.manager import AWSManager
 from cloud_guardian.iam_dynamic.actions.supported import (
     SupportedAction,
@@ -13,7 +14,7 @@ from cloud_guardian.iam_static.graph.identities.role import Role
 from cloud_guardian.iam_static.graph.identities.services import SupportedService
 from cloud_guardian.iam_static.graph.identities.user import User
 from cloud_guardian.iam_static.model import IAMManager
-from cloud_guardian import logger
+
 
 class Parameters(dict):
     """Extends dictionary to provide additional functionality or validation if necessary."""

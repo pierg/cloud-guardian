@@ -1,12 +1,12 @@
-from cloud_guardian.utils.shared import data_path
-import joblib
-import matplotlib.pyplot as plt
-import pandas as pd
 import json
+import uuid
 from enum import Enum
+
+import joblib
+import pandas as pd
 from cloud_guardian import logger
 from cloud_guardian.iam_static.graph.permission.effects import Effect
-import uuid
+from cloud_guardian.utils.shared import data_path
 
 
 class EntityType(Enum):
@@ -190,7 +190,8 @@ for source, v in permissions_mapping.items():
         except ValueError as e:
             print("Error:", e)
 
-        policy_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+        # ! id cannot be inferred from the original data
+        policy_id = str(uuid.uuid4())
 
         all_policies.append(
             {
@@ -258,7 +259,8 @@ for policy in policies:
 
 all_groups = []
 for group_id, entities in groups_mapping.items():
-    group_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+    # ! id cannot be inferred from the original data
+    group_id = str(uuid.uuid4())
 
     users = [{"ID": f"{entity.id}/{entity.name}"} for entity in entities]
 
@@ -288,7 +290,8 @@ unique_roles = {
 all_roles = []
 for policy in policies:
     if policy.source.id in unique_roles:
-        role_id = str(uuid.uuid4())  # ! id cannot be inferred from the original data
+        # ! id cannot be inferred from the original data
+        role_id = str(uuid.uuid4())
 
         all_roles.append(
             {

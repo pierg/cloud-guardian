@@ -1,13 +1,13 @@
-import re
-from typing import Tuple
 import json
+import re
 from datetime import datetime
+from typing import Tuple
 
 
 def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     """
     Extracts the name and type from a resource identifier.
-    
+
     The function handles two main types of resource identifiers:
     1. Custom identifiers for S3 that start with "_custom_s3_id_:".
     2. Standard resource paths with types such as user, role, group, policy
@@ -17,7 +17,7 @@ def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     if "s3" in id:
         # Strip the leading identifier type part and split by '/' to handle cases with paths
         return extract_resource_name(strip_s3_resource_id(id)), "s3"
-    
+
     # Split the ID based on '/'
     id_parts = id.split("/")
     if len(id_parts) < 2:
@@ -38,14 +38,14 @@ def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     else:
         # Handle unexpected types by raising an error
         raise ValueError(f"Unknown resource type: {id_type}")
-    
+
+
 def strip_s3_resource_id(id: str) -> str:
     # Regular expression to find the part until the first slash after the first colon
     match = re.match(r"([^:]+:[^/]*).*", id)
     if match:
-        return match.group(1) 
-    return id 
-
+        return match.group(1)
+    return id
 
 
 def extract_resource_name(s3_id: str) -> str:
@@ -54,12 +54,12 @@ def extract_resource_name(s3_id: str) -> str:
     return parts[1] if len(parts) > 1 else ""
 
 
-
 def datetime_serializer(o):
     """Custom serializer for datetime objects."""
     if isinstance(o, datetime):
         return o.isoformat()  # Convert datetime to ISO 8601 string format
     raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+
 
 def pretty_print(obj):
     if isinstance(obj, dict):

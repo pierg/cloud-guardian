@@ -36,21 +36,19 @@ def get_policy_from_name(iam, policy_name: str) -> dict:
     """Retrieve the policy ARN and document for a given policy name."""
     try:
         # Use a paginator to handle pagination
-        paginator = iam.get_paginator('list_policies')
-        for page in paginator.paginate(Scope='Local'):
-            for policy in page['Policies']:
-                if policy['PolicyName'] == policy_name:
-                    policy_arn = policy['Arn']
+        paginator = iam.get_paginator("list_policies")
+        for page in paginator.paginate(Scope="Local"):
+            for policy in page["Policies"]:
+                if policy["PolicyName"] == policy_name:
+                    policy_arn = policy["Arn"]
                     # Retrieve the policy document
                     policy_document = get_policy_document(iam, policy_arn)
-                    return {
-                        'PolicyArn': policy_arn,
-                        'PolicyDocument': policy_document
-                    }
+                    return {"PolicyArn": policy_arn, "PolicyDocument": policy_document}
         logger.warning(f"No policy found with name {policy_name}")
     except ClientError as e:
         logger.error(f"Error searching for policy named {policy_name}: {e}")
         raise e
+
 
 def delete_policy(iam, policy_arn: str):
     try:
