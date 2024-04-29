@@ -1,7 +1,7 @@
 from arnparse import arnparse
 from botocore.exceptions import ClientError
 from cloud_guardian import logger
-from cloud_guardian.aws.helpers.s3.bucket_operations import get_bucket
+from cloud_guardian.aws.helpers.s3.bucket_operations import get_bucket_info
 
 
 def get_identity_or_resource_from_arn(arn: str, iam=None, s3=None):
@@ -13,7 +13,6 @@ def get_identity_or_resource_from_arn(arn: str, iam=None, s3=None):
         resource_name = (
             parsed_arn.resource
         )  # e.g., "bucket-name" for S3 or "user-name" for IAM
-
         if service == "iam" and iam:
             if resource_type == "user":
                 response = iam.get_user(UserName=resource_name)
@@ -32,7 +31,7 @@ def get_identity_or_resource_from_arn(arn: str, iam=None, s3=None):
                     f"Unsupported IAM resource type '{resource_type}' in ARN"
                 )
         elif service == "s3" and s3:
-            return get_bucket(
+            return get_bucket_info(
                 s3,
                 resource_name.split("/")[0] if "/" in resource_name else resource_name,
             )

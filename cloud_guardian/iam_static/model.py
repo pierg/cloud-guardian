@@ -61,15 +61,18 @@ class IAMManager:
                 source_dict = get_identity_or_resource_from_arn(
                     source_arn, self.iam, self.s3
                 )
+                pretty_print(source_dict)
 
                 # FIXME: transform the `ResponseMetadata` object in a Resource object (no apparent link)
                 # example of data returned by `get_identity_or_resource_from_arn`:
                 # {'ResponseMetadata': {'RequestId': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W'}, 'RetryAttempts': 0}, 'Owner': {'DisplayName': 'webfile', 'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a'}, 'Grants': [{'Grantee': {'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a', 'Type': 'CanonicalUser'}, 'Permission': 'FULL_CONTROL'}]}
                 #
                 # As a consequence, the target object cannot be retrieved from the Resource factory
+                print("FIXME2")
                 target_dict = get_identity_or_resource_from_arn(
                     resource_arn, self.iam, self.s3
                 )
+                pretty_print(target_dict)
 
                 for action in statement["Action"]:
                     permission = PermissionFactory.get_or_create(

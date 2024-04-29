@@ -25,6 +25,23 @@ def create_bucket(s3, bucket_name: str, region: str = None) -> str:
             raise
 
 
+def get_bucket_info(s3, bucket_name: str) -> dict:
+    """Retrieve metadata about an S3 bucket, like: name, creation date, and owner."""
+    try:
+        response = s3.get_bucket_acl(Bucket=bucket_name)
+        owner = response['Owner']
+        logger.info(f"Retrieved bucket {bucket_name} information successfully.\nOwner  {owner}")
+        return {
+            "Name": bucket_name,
+            "Owner": owner
+        }
+    except ClientError as e:
+        logger.error(f"Error retrieving information for bucket {bucket_name}: {e}")
+        raise
+
+
+
+
 def get_bucket(s3, bucket_name: str) -> dict:
     """Retrieve metadata about an S3 bucket."""
     try:
