@@ -51,6 +51,8 @@ class IAMManager:
         for statement in statements:
             source_arn = statement["Principal"]["ID"]
             self.graph.get_relationships_from_node(source_arn)
+            pretty_print(statement)
+            print("FIXME")
 
             for resource_arn in statement["Resource"]:
                 # FIXME: invalid custom ARN:
