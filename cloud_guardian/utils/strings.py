@@ -42,6 +42,8 @@ def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
 
 def strip_s3_resource_id(id: str) -> str:
     # Regular expression to find the part until the first slash after the first colon
+    if "s3" not in id:
+        return id
     match = re.match(r"([^:]+:[^/]*).*", id)
     if match:
         return match.group(1)

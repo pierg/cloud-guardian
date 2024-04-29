@@ -5,54 +5,73 @@ from cloud_guardian.utils.strings import strip_s3_resource_id
 
 class BiMap:
     def __init__(self):
-        self.map = {}
-        self.reverse_map = {}
+        self.arn_to_ids = {}
+        self.ids_to_arn = {}
 
-    def add(self, key, value):
+    def add(self, arn: str, id: str):
         if not (
-            isinstance(key, (int, str, float, tuple))
-            and isinstance(value, (int, str, float, tuple))
+            isinstance(arn, (str))
+            and isinstance(id, (str))
         ):
             raise ValueError(
-                "Keys and values must be hashable types (int, str, float, tuple)"
+                "Keys and values must be hashable types (str)"
             )
-        if key in self.map:
-            if self.map[key] != value:
+        if arn in self.arn_to_ids:
+            if self.arn_to_ids[arn] != id:
                 raise ValueError(
-                    f"Cannot add key {key} with a {value}; existing value is different ({self.map[key]})."
+                    f"Cannot add key {arn} with a {id}; existing value is different ({self.arn_to_ids[arn]})."
                 )
             else:
                 logger.info(
-                    f"Ignoring addition of existing key-value pair {key} -> {value}"
+                    f"Ignoring addition of existing key-value pair {arn} -> {id}"
                 )
         else:
-            logger.info(f"Adding {key} -> {value}")
-            self.map[key] = value
-            self.reverse_map[value] = key
+            logger.info(f"Adding {arn} -> {id}")
+            self.arn_to_ids[arn] = id
+            self.ids_to_arn[id] = arn
 
-    def remove(self, key):
-        if not isinstance(key, (int, str, float, tuple)):
+    def remove_arn(self, arn):
+        if not isinstance(arn, (str)):
             raise ValueError("Key must be a hashable type")
-        if key in self.map:
-            value = self.map.pop(key)
-            self.reverse_map.pop(value, None)
+        if arn in self.arn_to_ids:
+            value = self.arn_to_ids.pop(arn)
+            self.ids_to_arn.pop(value, None)
         else:
-            raise KeyError(f"Key '{key}' not found and cannot be removed.")
+            raise KeyError(f"Key '{arn}' not found and cannot be removed.")
 
-    def get(self, key):
-        if not isinstance(key, (int, str, float, tuple)):
+    def get_arn(self, id):
+        if not isinstance(id, (str)):
             raise ValueError(
-                f"Key must be a hashable type. Received {type(key).__name__} which is not."
+                f"Key must be a hashable type. Received {type(id).__name__} which is not."
             )
-        return self.map.get(key) or self.reverse_map.get(key)
-
-    def contains(self, key):
-        return key in self.map or key in self.reverse_map
+        base_id = strip_s3_resource_id(id)        
+        arn = self.ids_to_arn.get(base_id)
+        if arn is None:
+            logger.warning(f"Key {id} not found in mapping.")
+            return None
+        logger.info(f"Getting ARN for {id}: {arn}")
+        suffix = id[len(base_id) :]
+        return arn + suffix
+        
+    
+    def get_id(self, arn):
+        if not isinstance(arn, (str)):
+            raise ValueError(
+                f"Key must be a hashable type. Received {type(arn).__name__} which is not."
+            )
+        base_arn = strip_s3_resource_id(arn)        
+        id = self.ids_to_arn.get(base_arn)
+        if id is None:
+            logger.warning(f"Key {arn} not found in mapping.")
+            return None
+        logger.info(f"Getting ID for {arn}: {id}")
+        suffix = arn[len(base_arn) :]
+        return id + suffix
 
     def print_table(self):
         print(f"{'Key'.ljust(30)} | {'Value'.ljust(30)}")
         print("-" * 63)
-        for key, value in self.map.items():
+        for key, value in self.arn_to_ids.items():
             print(f"{key.ljust(30)} | {value.ljust(30)}")
 
 
@@ -69,6 +88,8 @@ def get_all_resources_ids(policy_dict: dict) -> list[str]:
         for statement in policy_dict["PolicyDocument"]["Statement"]
         for resource in statement["Resource"]
     ]
+
+
 
 
 def substitute_values(data: dict, mapping: BiMap) -> dict:
@@ -91,7 +112,7 @@ def substitute_values(data: dict, mapping: BiMap) -> dict:
                 # Replace base id and append any suffix from the original string
                 # Capture the remaining suffix after the base id
                 suffix = item[len(base_id) :]
-                return mapping.get(base_id) + suffix
+                return mapping.get_arn(base_id) + suffix
             else:
                 return item
         else:
@@ -99,3 +120,25 @@ def substitute_values(data: dict, mapping: BiMap) -> dict:
             return item
 
     return recurse(data)
+
+
+
+
+def update_arns(data: dict, mapping: BiMap):
+    if isinstance(data, dict):
+        for key, value in list(data.items()):
+            if isinstance(value, (dict, list)):
+                update_arns(value, mapping)
+            else:
+                new_value = mapping.get_arn(value)
+                if new_value is not None:
+                    data[key] = new_value
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            if isinstance(item, (dict, list)):
+                update_arns(item, mapping)
+            else:
+                new_value = mapping.get_arn(item)
+                if new_value is not None:
+                    data[index] = new_value
+

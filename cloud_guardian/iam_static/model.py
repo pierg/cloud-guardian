@@ -38,8 +38,8 @@ class IAMManager:
         # get all policy statements
         statements = []
         for bucket in list_buckets(self.s3):
-            pretty_print(bucket)
-            pretty_print(get_bucket_policy(self.s3, bucket["name"]))
+            # pretty_print(bucket)
+            # pretty_print(get_bucket_policy(self.s3, bucket["name"]))
             policy_document = get_bucket_policy(self.s3, bucket["name"])[
                 "PolicyDocument"
             ]
@@ -56,9 +56,9 @@ class IAMManager:
                 # FIXME: invalid custom ARN:
                 # "arnparse.arnparse.MalformedArnError: arn_str: custom_id___custom__:group/BasicUsers"
                 #
-                # source_dict = get_identity_or_resource_from_arn(
-                #     source_arn, self.iam, self.s3
-                # )
+                source_dict = get_identity_or_resource_from_arn(
+                    source_arn, self.iam, self.s3
+                )
 
                 # FIXME: transform the `ResponseMetadata` object in a Resource object (no apparent link)
                 # example of data returned by `get_identity_or_resource_from_arn`:

@@ -26,9 +26,9 @@ from cloud_guardian.utils.maps import (
     BiMap,
     get_all_principals_ids,
     get_all_resources_ids,
-    substitute_values,
+    update_arns,
 )
-from cloud_guardian.utils.strings import get_name_and_type_from_id, strip_s3_resource_id
+from cloud_guardian.utils.strings import get_name_and_type_from_id, pretty_print, strip_s3_resource_id
 
 
 class AWSManager:
@@ -108,9 +108,10 @@ class AWSManager:
         for group in groups_dict["Groups"]:
             group_name = get_name_and_type_from_id(group["ID"])[0]
             group_arn = create_group(self.iam, group_name)
+            logger.warning("GROUP CREATED WITH ARN: " + group_arn)
             bi_map.add(group_arn, group["ID"])
             for policy in group["AttachedPolicies"]:
-                policy_arn = bi_map.get(policy["ID"])
+                policy_arn = bi_map.get_arn(policy["ID"])
                 attach_policy_to_group(self.iam, policy_arn, group_name)
 
         # Create users, attach policies
@@ -124,14 +125,14 @@ class AWSManager:
             )
             bi_map.add(user_arn, user["ID"])
             for policy in user.get("AttachedPolicies", []):
-                policy_arn = bi_map.get(policy["ID"])
+                policy_arn = bi_map.get_arn(policy["ID"])
                 attach_policy_to_user(self.iam, policy_arn, user_name)
 
         # Add users to groups
         for group in groups_dict["Groups"]:
             group_name = get_name_and_type_from_id(group["ID"])[0]
             for user in group["Users"]:
-                user_name = get_name_and_type_from_id(bi_map.get(user["ID"]))[0]
+                user_name = get_name_and_type_from_id(bi_map.get_arn(user["ID"]))[0]
                 add_user_to_group(self.iam, user_name, group_name)
 
         # Create roles and attach policies
@@ -146,7 +147,7 @@ class AWSManager:
         for policy in policies_dict["ResourceBasedPolicies"]:
             principals = get_all_principals_ids(policy)
             for principal_id in principals:
-                principal_arn = bi_map.get(principal_id)
+                principal_arn = bi_map.get_arn(principal_id)
                 if principal_arn is None:
                     logger.warning(
                         f"Principal {principal_id} not found in BiMap. Creating identity now..."
@@ -175,7 +176,7 @@ class AWSManager:
             resources_ids = get_all_resources_ids(policy)
             for resource_id in resources_ids:
                 resource_id = strip_s3_resource_id(resource_id)
-                if bi_map.get(resource_id) is None:
+                if bi_map.get_arn(resource_id) is None:
                     resource_name, resource_type = get_name_and_type_from_id(
                         resource_id
                     )
@@ -186,8 +187,10 @@ class AWSManager:
                     else:
                         raise ValueError("Resource type not recognized.")
 
-            new_policy_dict = substitute_values(policy, bi_map)
-            set_bucket_policy(self.s3, resource_name, new_policy_dict)
+            pretty_print(policy)
+            update_arns(policy, bi_map)
+            pretty_print(policy)
+            set_bucket_policy(self.s3, resource_name, policy)
 
     def export_to_json(self, folder_path: Path):
         pass
