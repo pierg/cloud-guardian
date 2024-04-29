@@ -6,16 +6,19 @@ from cloud_guardian.aws.helpers.s3.bucket_operations import list_buckets
 from cloud_guardian.aws.helpers.s3.bucket_policy import get_bucket_policy
 from cloud_guardian.aws.manager import AWSManager
 from cloud_guardian.iam_static.graph.graph import IAMGraph
-from cloud_guardian.iam_static.graph.identities.group import Group
+from cloud_guardian.iam_static.graph.identities.group import Group, GroupFactory
 from cloud_guardian.iam_static.graph.identities.resources import (
     Resource,
+    ResourceFactory,
 )
-from cloud_guardian.iam_static.graph.identities.role import Role
-from cloud_guardian.iam_static.graph.identities.user import User
+from cloud_guardian.iam_static.graph.identities.role import Role, RoleFactory
+from cloud_guardian.iam_static.graph.identities.user import User, UserFactory
 from cloud_guardian.iam_static.graph.permission.actions import ActionsFactory
 from cloud_guardian.iam_static.graph.permission.effects import Effect
 from cloud_guardian.iam_static.graph.permission.permission import PermissionFactory
-from cloud_guardian.utils.strings import pretty_print
+from cloud_guardian.iam_static.graph.relationships.relationships import (
+    HasPermissionToResource,
+)
 
 
 class IAMManager:
@@ -28,70 +31,11 @@ class IAMManager:
         self.graph = IAMGraph()
 
     def update_graph(self):
-        # TODO: use the helper functions in
-        # cloud_guardian.aws.helpers.iam and cloud_guardian.aws.helpers.s3 (or add new ones if needed)
-        # with the rerefence self.iam and self.s3 to
-        # pull the data needed to populate self.graph data structures without adding new ones (no Policy etc..)
-        # then delete analyzer.py, analyzer_old etc..
-        # Use the methods below when possible, add new ones if needed
-
-        # get all policy statements
-        statements = []
         for bucket in list_buckets(self.s3):
-            # pretty_print(bucket)
-            # pretty_print(get_bucket_policy(self.s3, bucket["name"]))
             policy_document = get_bucket_policy(self.s3, bucket["name"])[
                 "PolicyDocument"
             ]
-            for statement in policy_document["Statement"]:
-                statements.append(statement)
-
-        # TODO: process the statements one by one to update the graph
-        # principal -(permission: effect+action)-> resources
-        for statement in statements:
-            source_arn = statement["Principal"]["ID"]
-            self.graph.get_relationships_from_node(source_arn)
-            pretty_print(statement)
-            print("FIXME")
-
-            for resource_arn in statement["Resource"]:
-                # FIXME: invalid custom ARN:
-                # "arnparse.arnparse.MalformedArnError: arn_str: custom_id___custom__:group/BasicUsers"
-                #
-                source_dict = get_identity_or_resource_from_arn(
-                    source_arn, self.iam, self.s3
-                )
-                pretty_print(source_dict)
-
-                # FIXME: transform the `ResponseMetadata` object in a Resource object (no apparent link)
-                # example of data returned by `get_identity_or_resource_from_arn`:
-                # {'ResponseMetadata': {'RequestId': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': 'Z5E917JYdui8gdH45JeV68dKYBxuuzntxbPYzMmnG5Eky3j11g9W'}, 'RetryAttempts': 0}, 'Owner': {'DisplayName': 'webfile', 'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a'}, 'Grants': [{'Grantee': {'ID': '75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a', 'Type': 'CanonicalUser'}, 'Permission': 'FULL_CONTROL'}]}
-                #
-                # As a consequence, the target object cannot be retrieved from the Resource factory
-                print("FIXME2")
-                target_dict = get_identity_or_resource_from_arn(
-                    resource_arn, self.iam, self.s3
-                )
-                pretty_print(target_dict)
-
-                for action in statement["Action"]:
-                    permission = PermissionFactory.get_or_create(
-                        action=ActionsFactory.get_or_create(action),
-                        effect=(
-                            Effect.ALLOW
-                            if statement["Effect"] == "Allow"
-                            else Effect.DENY
-                        ),
-                        conditions=(
-                            statement["Condition"] if "Condition" in statement else []
-                        ),
-                    )
-
-                    # TODO: process (source, target, permission)
-                    # check if these characteristics are already in an existing edge
-                    # (from `existing_relationships`: check source, target, and permission ID)
-                    # if so: remove/update existing relationship
-                    # otherwise: add relationship
+            self.update_permissions_to_node(policy_document)
 
     def update_node(self, arn: str):
         # get updated info from the IAM client
@@ -120,14 +64,78 @@ class IAMManager:
         elif entity_type == "group":
             self._add_group(entity["GroupName"], entity["Arn"], entity["CreateDate"])
 
-    def update_permissions_to_node(self, policy_document: dict, arn: str):
-        # TODO
-        # policy_document is the policy document in json format (dict) e.g. {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::examplebucket/*"}]}
-        # Create/Update Permission objects and attach to the nodes in the graph, etc..
+    def update_permissions_to_node(self, policy_document: dict):
+        for statement in policy_document["Statement"]:
+            for resource_arn in statement["Resource"]:
+                # source
+                source_dict = get_identity_or_resource_from_arn(
+                    statement["Principal"]["ID"], self.iam, self.s3
+                )
 
-        # FIXME: the edges retrieved from self.graph.graph.edges() do not contain enough information
-        # to update the edges, and consequently the policies attached to an entity (edge: HadPermission)
-        pass
+                if "GroupName" in source_dict:
+                    source = GroupFactory.get_or_create(
+                        name=source_dict["GroupName"],
+                        arn=source_dict["Arn"],
+                        create_date=source_dict["CreateDate"],
+                    )
+                elif "RoleName" in source_dict:
+                    source = RoleFactory.get_or_create(
+                        name=source_dict["RoleName"],
+                        arn=source_dict["Arn"],
+                        create_date=source_dict["CreateDate"],
+                    )
+                elif "UserName" in source_dict:
+                    source = UserFactory.get_or_create(
+                        name=source_dict["UserName"],
+                        arn=source_dict["Arn"],
+                        create_date=source_dict["CreateDate"],
+                    )
+                else:
+                    logger.error(f"Unknown source: {source_dict}")
+
+                if source not in self.graph.get_nodes():
+                    self.graph.graph.add_node(source)
+
+                # target
+                target_dict = get_identity_or_resource_from_arn(
+                    resource_arn, self.iam, self.s3
+                )
+
+                target = ResourceFactory.get_or_create(
+                    name=target_dict["Name"],
+                    arn=target_dict["ARN"],
+                    service=target_dict["Service"],
+                    resource_type=None,
+                )
+
+                if target not in self.graph.get_nodes():
+                    self.graph.graph.add_node(target)
+
+                # clear the relationships between the source and the target
+                self.graph.graph.remove_edge(source, target)
+
+                for action in statement["Action"]:
+                    permission = PermissionFactory.get_or_create(
+                        action=ActionsFactory.get_or_create(action),
+                        effect=(
+                            Effect.ALLOW
+                            if statement["Effect"] == "Allow"
+                            else Effect.DENY
+                        ),
+                        conditions=(
+                            statement["Condition"] if "Condition" in statement else []
+                        ),
+                    )
+
+                    # FIXME: indicates that the node is not in the graph while it necessarily
+                    # has been added (lines 97 and 112 above)
+                    self.graph.add_relationship(
+                        HasPermissionToResource(
+                            source=source,
+                            target=target,
+                            permission=permission,
+                        )
+                    )
 
     def _add_user(self, name: str, arn: str, create_date: str):
         user = User(
