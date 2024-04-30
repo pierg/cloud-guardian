@@ -10,15 +10,15 @@ from moto import mock_aws
 mock = mock_aws()
 mock.start()
 
-# data_folder = data_path / "toy_example"
-# process_files(data_folder / "original", data_folder / "processed")
-
 
 aws_manager = AWSManager()
 # Import From JSON
+# data_folder = data_path / "toy_example"
+# process_files(data_folder / "original", data_folder / "processed")
 # aws_manager.import_data(data_folder / "processed")
 
 
+# Import From Tuples
 aws_manager.importer = DFImporter()
 aws_manager.import_data(data_path / "sensitive")
 

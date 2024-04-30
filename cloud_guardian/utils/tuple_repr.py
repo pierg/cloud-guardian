@@ -111,10 +111,6 @@ class Tuples:
             )
         return tuples_instance
 
-
-    
-    def get_all_entity_types(self):
-        return {entity.entity_type for entity in self.entities.values()}
     
     def get_all_relationships(self, full_actions=False):
         if full_actions:
@@ -128,16 +124,37 @@ class Tuples:
 
 
 # Example of use
-# data = joblib.load(data_path / "sensitive" / "data.joblib")
-# df = pd.DataFrame(data)
-# tuples = Tuples.from_df(df)
+data = joblib.load(data_path / "sensitive" / "data.joblib")
+df = pd.DataFrame(data)
+tuples = Tuples.from_df(df)
 
-# # Print all types of relationships
-# for relationship in tuples.get_all_relationships():
-#     print(relationship)
-#     for action in tuples.get_all_actions_for_pair(relationship[0], relationship[1]):
-#         print(action)
+# Print all types of relationships
+for relationship in tuples.get_all_relationships():
+    print(relationship)
+    for action in tuples.get_all_actions_for_pair(relationship[0], relationship[1]):
+        print(action)
+    print("\n")
+
+
+# Print all users
+for user in tuples.users.values():
+    print(user.id)
+
+# Print all groups
+for group in tuples.groups.values():
+    print(group.id)
+
+# # Print all roles
+# for role in tuples.roles.values():
+#     print(role.id)
+
+# # Print all resources
+# for resource in tuples.resources.values():
+#     print(resource)
+
+# # Print all permissions
+# for permission in tuples.permissions:
+#     print(permission)
+#     print(permission.to_policy_document())
 #     print("\n")
-
-
 
