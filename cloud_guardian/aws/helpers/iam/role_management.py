@@ -14,13 +14,12 @@ def create_role(iam, role_name: str, assume_role_policy: dict) -> str:
     except ClientError as e:
         logger.error(f"Error creating role {role_name}: {e}")
         raise e
-    
+
 
 def update_assume_role_policy(iam, role_name: str, new_assume_role_policy: dict):
     try:
         response = iam.update_assume_role_policy(
-            RoleName=role_name,
-            PolicyDocument=json.dumps(new_assume_role_policy)
+            RoleName=role_name, PolicyDocument=json.dumps(new_assume_role_policy)
         )
         logger.info(f"Assume role policy updated for role {role_name}.")
     except ClientError as e:

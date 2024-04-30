@@ -29,12 +29,9 @@ from cloud_guardian.utils.maps import (
 )
 from cloud_guardian.utils.strings import (
     get_name_and_type_from_id,
-    pretty_print,
     strip_s3_resource_id,
 )
-from cloud_guardian.utils.tuple_repr import TupleEntity, TuplePermission, Tuples
-
-
+from cloud_guardian.utils.tuple_repr import Tuples
 
 
 class Importer(ABC):
@@ -163,21 +160,23 @@ class DFImporter(Importer):
                 user_info["SecretAccessKey"],
             )
             bi_map.add(user_arn, user.id)
-            
+
         # Create all groups and add users
         for group in tuples.groups.values():
             group_arn = create_group(aws_manager.iam, group.id)
             bi_map.add(group_arn, group.id)
-        
+
         # Add users to groups
         for group_id, users in tuples.group_to_users.items():
             for user in users:
                 user_name = get_name_and_type_from_id(bi_map.get_arn(user))[0]
                 add_user_to_group(aws_manager.iam, user_name, group_id)
-            
+
         # Create all roles and attach policies
         for role in tuples.roles.values():
-            role_arn = create_role(aws_manager.iam, role.name, tuples.roles_to_policy_document[role.id])
+            role_arn = create_role(
+                aws_manager.iam, role.name, tuples.roles_to_policy_document[role.id]
+            )
             bi_map.add(role_arn, role.id)
 
         # Process all permissions
@@ -188,4 +187,6 @@ class DFImporter(Importer):
                 raise ValueError(f"Source {permission.source.id} not found in BiMap")
             if target_arn is None:
                 raise ValueError(f"Target {permission.target.id} not found in BiMap")
-            create_policy(aws_manager.iam, permission.action, permission.to_policy_document())
+            create_policy(
+                aws_manager.iam, permission.action, permission.to_policy_document()
+            )

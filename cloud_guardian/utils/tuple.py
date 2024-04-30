@@ -7,6 +7,7 @@ import joblib
 import pandas as pd
 from cloud_guardian.utils.shared import data_path
 
+
 class EntityType(Enum):
     SOURCE = "source"
     TARGET = "target"
@@ -43,10 +44,8 @@ class Permission:
         if self.permission == "FULL_CONTROL":
             self.permission = "*"
 
-
     def __str__(self):
         return f"{self.permission} ({self.effect})"
-
 
 
 class TupleRepresentation:
@@ -88,7 +87,7 @@ class TupleRepresentation:
     @staticmethod
     def create_permission(permission, mode):
         return Permission(mode, permission)
-    
+
     @property
     def source_id(self):
         return f"__custom__id__{self.source_type}/{self.source}"
@@ -104,12 +103,8 @@ class TupleRepresentation:
                 "Statement": [
                     {
                         "Effect": self.permission.effect,
-                        "Principal": {
-                          "ID": f"{self.target_id}"
-                        },
-                        "Action": [
-                            self.permission.action
-                        ],
+                        "Principal": {"ID": f"{self.target_id}"},
+                        "Action": [self.permission.action],
                         "Resource": f"{self.target_id}",
                     }
                 ],
@@ -223,9 +218,7 @@ for source, v in permissions_mapping.items():
                     "Statement": [
                         {
                             "Effect": effect,
-                            "Action": [
-                                permission.action for permission in permissions
-                            ],
+                            "Action": [permission.action for permission in permissions],
                             "Resource": f"{target.id}/{target.name}",
                         }
                     ],

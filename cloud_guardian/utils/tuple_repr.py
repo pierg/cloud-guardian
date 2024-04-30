@@ -1,7 +1,9 @@
 from dataclasses import dataclass
-import pandas as pd
+
 import joblib
+import pandas as pd
 from cloud_guardian.utils.shared import data_path
+
 
 @dataclass
 class TupleEntity:
@@ -26,10 +28,11 @@ class TupleEntity:
 
     def __hash__(self) -> int:
         return hash(self.id)
-    
+
     @property
     def name(self):
         return self.id
+
 
 @dataclass
 class TuplePermission:
@@ -45,17 +48,20 @@ class TuplePermission:
         return {
             "PolicyDocument": {
                 "Version": "2012-10-17",
-                "Statement": [{
-                    "Effect": "Allow",
-                    "Principal": {"ID": self.target.id},
-                    "Action": [self.action],
-                    "Resource": self.source.id,
-                }]
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"ID": self.target.id},
+                        "Action": [self.action],
+                        "Resource": self.source.id,
+                    }
+                ],
             },
         }
 
     def __hash__(self) -> int:
         return hash((self.source, self.action, self.target))
+
 
 class Tuples:
     def __init__(self):
@@ -89,12 +95,10 @@ class Tuples:
                     "Statement": [
                         {
                             "Effect": "Allow",
-                            "Principal": {
-                                "ID": "{source.id}"
-                            },
-                            "Action": "sts:AssumeRole"
+                            "Principal": {"ID": "{source.id}"},
+                            "Action": "sts:AssumeRole",
                         }
-                    ]
+                    ],
                 }
             }
         else:
@@ -107,20 +111,33 @@ class Tuples:
             tuples_instance.add(
                 TupleEntity(row["source"]),
                 row["permission"],
-                TupleEntity(row["destination"])
+                TupleEntity(row["destination"]),
             )
         return tuples_instance
 
-    
     def get_all_relationships(self, full_actions=False):
         if full_actions:
-            return {(permission.source.entity_type, permission.action, permission.target.entity_type) for permission in self.permissions}
+            return {
+                (
+                    permission.source.entity_type,
+                    permission.action,
+                    permission.target.entity_type,
+                )
+                for permission in self.permissions
+            }
         else:
-            return {(permission.source.entity_type, permission.target.entity_type) for permission in self.permissions}
+            return {
+                (permission.source.entity_type, permission.target.entity_type)
+                for permission in self.permissions
+            }
 
     def get_all_actions_for_pair(self, source_type, target_type):
-        return {permission.action for permission in self.permissions if permission.source.entity_type == source_type and permission.target.entity_type == target_type}
-
+        return {
+            permission.action
+            for permission in self.permissions
+            if permission.source.entity_type == source_type
+            and permission.target.entity_type == target_type
+        }
 
 
 # Example of use
@@ -157,4 +174,3 @@ for group in tuples.groups.values():
 #     print(permission)
 #     print(permission.to_policy_document())
 #     print("\n")
-
