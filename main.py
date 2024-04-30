@@ -1,4 +1,5 @@
 from cloud_guardian import logger
+from cloud_guardian.aws.importer import DFImporter
 from cloud_guardian.aws.manager import AWSManager
 from cloud_guardian.iam_dynamic.model import IAMGraphMDP
 from cloud_guardian.iam_static.model import IAMManager
@@ -9,12 +10,20 @@ from moto import mock_aws
 mock = mock_aws()
 mock.start()
 
-data_folder = data_path / "toy_example"
-process_files(data_folder / "original", data_folder / "processed")
+# data_folder = data_path / "toy_example"
+# process_files(data_folder / "original", data_folder / "processed")
+
 
 aws_manager = AWSManager()
+# Import From JSON
+# aws_manager.import_data(data_folder / "processed")
 
-aws_manager.import_from_json(data_folder / "processed")
+
+aws_manager.importer = DFImporter()
+aws_manager.import_data(data_path / "sensitive")
+
+
+# aws_manager.import_from_json(data_folder / "processed")
 
 iam_manager = IAMManager(aws_manager)
 

@@ -25,32 +25,39 @@ def create_bucket(s3, bucket_name: str, region: str = None) -> str:
             raise
 
 
-
 def get_bucket_info(s3, bucket_name: str) -> dict:
     """Retrieve metadata about an S3 bucket, like: name, creation date, owner, ARN, and service."""
     try:
         all_buckets = s3.list_buckets()
-        bucket_info = next((bucket for bucket in all_buckets['Buckets'] if bucket['Name'] == bucket_name), None)
+        bucket_info = next(
+            (
+                bucket
+                for bucket in all_buckets["Buckets"]
+                if bucket["Name"] == bucket_name
+            ),
+            None,
+        )
         if bucket_info is None:
             logger.error(f"Bucket {bucket_name} not found.")
             raise Exception("Bucket not found")
 
         response = s3.get_bucket_acl(Bucket=bucket_name)
-        owner = response['Owner']
+        owner = response["Owner"]
         bucket_arn = f"arn:aws:s3:::{bucket_name}"
 
-        logger.info(f"Retrieved bucket {bucket_name} information successfully: Owner {owner}, Created on {bucket_info['CreationDate']}, ARN {bucket_arn}")
+        logger.info(
+            f"Retrieved bucket {bucket_name} information successfully: Owner {owner}, Created on {bucket_info['CreationDate']}, ARN {bucket_arn}"
+        )
         return {
             "Name": bucket_name,
-            "CreateDate": bucket_info['CreationDate'],
+            "CreateDate": bucket_info["CreationDate"],
             "Owner": owner,
             "ARN": bucket_arn,
-            "Service": "s3"
+            "Service": "s3",
         }
     except ClientError as e:
         logger.error(f"Error retrieving information for bucket {bucket_name}: {e}")
         raise
-
 
 
 def get_bucket(s3, bucket_name: str) -> dict:

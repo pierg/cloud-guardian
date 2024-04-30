@@ -1,4 +1,3 @@
-
 from cloud_guardian import logger
 from cloud_guardian.utils.strings import strip_s3_resource_id
 
@@ -9,24 +8,19 @@ class BiMap:
         self.ids_to_arn = {}
 
     def add(self, arn: str, id: str):
-        if not (
-            isinstance(arn, (str))
-            and isinstance(id, (str))
-        ):
-            raise ValueError(
-                "Keys and values must be hashable types (str)"
-            )
+        if not (isinstance(arn, (str)) and isinstance(id, (str))):
+            raise ValueError("Keys and values must be hashable types (str)")
         if arn in self.arn_to_ids:
             if self.arn_to_ids[arn] != id:
                 raise ValueError(
                     f"Cannot add key {arn} with a {id}; existing value is different ({self.arn_to_ids[arn]})."
                 )
             else:
-                logger.info(
+                logger.debug(
                     f"Ignoring addition of existing key-value pair {arn} -> {id}"
                 )
         else:
-            logger.info(f"Adding {arn} -> {id}")
+            logger.debug(f"Adding {arn} -> {id}")
             self.arn_to_ids[arn] = id
             self.ids_to_arn[id] = arn
 
@@ -44,27 +38,26 @@ class BiMap:
             raise ValueError(
                 f"Key must be a hashable type. Received {type(id).__name__} which is not."
             )
-        base_id = strip_s3_resource_id(id)        
+        base_id = strip_s3_resource_id(id)
         arn = self.ids_to_arn.get(base_id)
         if arn is None:
             logger.warning(f"Key {id} not found in mapping.")
             return None
-        logger.info(f"Getting ARN for {id}: {arn}")
+        logger.debug(f"Getting ARN for {id}: {arn}")
         suffix = id[len(base_id) :]
         return arn + suffix
-        
-    
+
     def get_id(self, arn):
         if not isinstance(arn, (str)):
             raise ValueError(
                 f"Key must be a hashable type. Received {type(arn).__name__} which is not."
             )
-        base_arn = strip_s3_resource_id(arn)        
+        base_arn = strip_s3_resource_id(arn)
         id = self.ids_to_arn.get(base_arn)
         if id is None:
             logger.warning(f"Key {arn} not found in mapping.")
             return None
-        logger.info(f"Getting ID for {arn}: {id}")
+        logger.debug(f"Getting ID for {arn}: {id}")
         suffix = arn[len(base_arn) :]
         return id + suffix
 
@@ -88,8 +81,6 @@ def get_all_resources_ids(policy_dict: dict) -> list[str]:
         for statement in policy_dict["PolicyDocument"]["Statement"]
         for resource in statement["Resource"]
     ]
-
-
 
 
 def substitute_values(data: dict, mapping: BiMap) -> dict:
@@ -122,8 +113,6 @@ def substitute_values(data: dict, mapping: BiMap) -> dict:
     return recurse(data)
 
 
-
-
 def update_arns(data: dict, mapping: BiMap):
     if isinstance(data, dict):
         for key, value in list(data.items()):
@@ -141,4 +130,3 @@ def update_arns(data: dict, mapping: BiMap):
                 new_value = mapping.get_arn(item)
                 if new_value is not None:
                     data[index] = new_value
-

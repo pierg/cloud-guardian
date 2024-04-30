@@ -3,6 +3,8 @@ import re
 from datetime import datetime
 from typing import Tuple
 
+from cloud_guardian import logger
+
 
 def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     """
@@ -12,7 +14,7 @@ def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     1. Custom identifiers for S3 that start with "_custom_s3_id_:".
     2. Standard resource paths with types such as user, role, group, policy
     """
-
+    logger.debug(f"Parsed ID: {id}")
     # Handling S3 identifiers specifically
     if "s3" in id:
         # Strip the leading identifier type part and split by '/' to handle cases with paths
@@ -27,17 +29,26 @@ def get_name_and_type_from_id(id: str) -> Tuple[str, str]:
     # Extract the type and name from the last two parts of the split ID
     id_type, id_name = id_parts[-2], id_parts[-1]
 
+    res_name = id_name
+    res_type = id_type
+
     if "user" in id_type:
-        return id_name, "user"
+        res_name = id_name
+        res_type = "user"
     elif "role" in id_type:
-        return id_name, "role"
+        res_name = id_name
+        res_type = "role"
     elif "group" in id_type:
-        return id_name, "group"
+        res_name = id_name
+        res_type = "group"
     elif "policy" in id_type:
-        return id_name, "policy"
+        res_name = id_name
+        res_type = "policy"
     else:
         # Handle unexpected types by raising an error
         raise ValueError(f"Unknown resource type: {id_type}")
+    logger.debug(f"Resource name: {res_name}, Resource type: {res_type}")
+    return res_name, res_type
 
 
 def strip_s3_resource_id(id: str) -> str:

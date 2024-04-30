@@ -18,7 +18,6 @@ aws_manager.import_from_json(data_folder / "generated")
 
 iam_manager = IAMManager(aws_manager)
 
-# TODO: Implement update_graph() and the other methods
 iam_manager.update_graph()
 
 dynamic_model = IAMGraphMDP(iam_manager, aws_manager)

@@ -1,13 +1,11 @@
 import json
 import uuid
+from dataclasses import dataclass
 from enum import Enum
 
 import joblib
 import pandas as pd
-from cloud_guardian import logger
-from cloud_guardian.iam_static.graph.permission.effects import Effect
 from cloud_guardian.utils.shared import data_path
-
 
 class EntityType(Enum):
     SOURCE = "source"
@@ -36,13 +34,19 @@ class Entity:
         return f"{self.name} {self.id} ({self.entity_type.name}/{self.entity_category.name})"
 
 
+@dataclass
 class Permission:
-    def __init__(self, effect, permission):
-        self.effect = effect
-        self.permission = permission
+    effect: str
+    permission: str
+
+    def __post_init__(self):
+        if self.permission == "FULL_CONTROL":
+            self.permission = "*"
+
 
     def __str__(self):
         return f"{self.permission} ({self.effect})"
+
 
 
 class TupleRepresentation:
@@ -57,41 +61,60 @@ class TupleRepresentation:
         destination_id,
         mode,
     ):
-        source_mapping = {
+        self.source = self.create_entity(
+            source, source_type, source_id, EntityType.SOURCE
+        )
+        self.target = self.create_entity(
+            destination, destination_type, destination_id, EntityType.TARGET
+        )
+        self.permission = self.create_permission(permission, mode)
+
+    @staticmethod
+    def create_entity(name, entity_type, entity_id, entity_category):
+        entity_mapping = {
             "user": SourceType.USER,
             "group": SourceType.GROUP,
             "role": SourceType.ROLE,
-        }
-        self.source = (
-            Entity(
-                source_mapping.get(source_type), EntityType.SOURCE, source, source_id
-            )
-            if source_type in source_mapping
-            else logger.error(f"cannot parse source {source_type}")
-        )
-
-        target_mapping = {
             "s3": TargetType.S3,
             "postgresql": TargetType.POSTGRESQL,
         }
+        entity_class = entity_mapping.get(entity_type)
+        if entity_class:
+            return Entity(entity_class, entity_category, name, entity_id)
+        else:
+            logger.error(f"Cannot parse {entity_category.name.lower()} {entity_type}")
+            return None
 
-        target_mapping.update(source_mapping)
+    @staticmethod
+    def create_permission(permission, mode):
+        return Permission(mode, permission)
+    
+    @property
+    def source_id(self):
+        return f"__custom__id__{self.source_type}/{self.source}"
 
-        self.target = (
-            Entity(
-                target_mapping.get(destination_type),
-                EntityType.TARGET,
-                destination,
-                destination_id,
-            )
-            if destination_type in target_mapping
-            else logger.error(f"cannot parse target {destination_type}")
-        )
+    @property
+    def target_id(self):
+        return f"__custom__id__{self.destination_type}/{self.destination}"
 
-        self.permission = Permission(
-            Effect.ALLOW if mode == "allow" else Effect.DENY,
-            permission,
-        )
+    def to_policy_document(self) -> dict:
+        return {
+            "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": self.permission.effect,
+                        "Principal": {
+                          "ID": f"{self.target_id}"
+                        },
+                        "Action": [
+                            self.permission.action
+                        ],
+                        "Resource": f"{self.target_id}",
+                    }
+                ],
+            },
+        }
 
 
 def save_generated_json(main_key, json_data, filename):
@@ -102,7 +125,7 @@ def save_generated_json(main_key, json_data, filename):
         json_file.write(json.dumps({main_key: json_data}, indent=4))
 
 
-data_file = data_path / "sensitive" / "ds_4_tuples.joblib"
+data_file = data_path / "sensitive" / "data.joblib"
 
 data = joblib.load(data_file)
 
@@ -199,9 +222,9 @@ for source, v in permissions_mapping.items():
                     "Version": "2012-10-17",  # ! this information cannot be inferred from the original data
                     "Statement": [
                         {
-                            "Effect": effect.value,
+                            "Effect": effect,
                             "Action": [
-                                permission.permission for permission in permissions
+                                permission.action for permission in permissions
                             ],
                             "Resource": f"{target.id}/{target.name}",
                         }
@@ -299,11 +322,11 @@ for policy in policies:
                     "Version": "2012-10-17",  # ! this information cannot be inferred from the original data
                     "Statement": [
                         {
-                            "Effect": policy.permission.effect.value,
+                            "Effect": policy.permission.effect,
                             "Principal": {
                                 "AWS": f"{policy.source.id}/{policy.source.name}"
                             },
-                            "Action": policy.permission.permission,
+                            "Action": policy.permission.action,
                         }
                     ],
                 },
