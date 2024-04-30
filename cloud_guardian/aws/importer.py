@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from cloud_guardian import logger
 
 import joblib
 import pandas as pd
@@ -43,9 +44,12 @@ class Importer(ABC):
 class JsonImporter(Importer):
     def import_data(self, folder_path: Path, aws_manager):
         """Import IAM and S3 configurations from JSON files and create AWS resources"""
-        groups_dict, policies_dict, roles_dict, users_dict = (
-            load_iam_data_into_dictionaries(folder_path)
-        )
+        (
+            groups_dict,
+            policies_dict,
+            roles_dict,
+            users_dict,
+        ) = load_iam_data_into_dictionaries(folder_path)
 
         bi_map = BiMap()
 
@@ -147,6 +151,7 @@ class DFImporter(Importer):
     def import_data(self, folder_path: Path, aws_manager):
         data = joblib.load(folder_path / "data.joblib")
         df = pd.DataFrame(data)
+
         tuples = Tuples.from_df(df)
 
         bi_map = BiMap()
@@ -174,14 +179,22 @@ class DFImporter(Importer):
 
         # Create all roles and attach policies
         for role in tuples.roles.values():
-            role_arn = create_role(
-                aws_manager.iam, role.name, tuples.roles_to_policy_document[role.id]
-            )
-            bi_map.add(role_arn, role.id)
+            if role.id in tuples.roles_to_policy_document:
+                role_arn = create_role(
+                    aws_manager.iam, role.name, tuples.roles_to_policy_document[role.id]
+                )
+                bi_map.add(role_arn, role.id)
+            else:
+                logger.error(
+                    f"Role {role.id} not found in the typles roles_to_policy_document"
+                )
 
         # Process all permissions
         for permission in tuples.permissions:
             source_arn = bi_map.get_arn(permission.source.id)
+
+            # FIXME(importer): the targets (resources) need to be added to the bi_map
+            # above, you just add the users, groups, and roles to this bi_map
             target_arn = bi_map.get_arn(permission.target.id)
             if source_arn is None:
                 raise ValueError(f"Source {permission.source.id} not found in BiMap")

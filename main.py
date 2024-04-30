@@ -20,7 +20,7 @@ aws_manager = AWSManager()
 
 # Import From Tuples
 aws_manager.importer = DFImporter()
-aws_manager.import_data(data_path / "sensitive")
+aws_manager.import_data(data_path / "toy_example")
 
 
 # aws_manager.import_from_json(data_folder / "processed")

@@ -82,25 +82,31 @@ class Tuples:
             self.groups[source.id] = source
         elif source.entity_type == "role":
             self.roles[source.id] = source
-        elif source.entity_type == "s3" or source.entity_type == "postgresql":
-            self.resources[source.id] = source
-        else:
-            raise ValueError(f"Unknown entity type: {source.entity_type}")
-        if action == "belongs":
-            self.group_to_users.setdefault(target.id, set()).add(source.id)
-        elif action == "sts:AssumeRole":
-            self.roles_to_policy_document[target.id] = {
-                "AssumeRolePolicyDocument": {
+
+            # FIXME(importer): properly handle policy documents
+            self.roles_to_policy_document[source.id] = {
+                f"{action}PolicyDocument": {
                     "Version": "2012-10-17",
                     "Statement": [
                         {
                             "Effect": "Allow",
                             "Principal": {"ID": "{source.id}"},
-                            "Action": "sts:AssumeRole",
+                            "Action": action,
                         }
                     ],
                 }
             }
+        elif source.entity_type == "s3" or source.entity_type == "postgresql":
+            self.resources[source.id] = source
+        else:
+            raise ValueError(f"Unknown entity type: {source.entity_type}")
+
+        if action == "belongs":
+            self.group_to_users.setdefault(target.id, set()).add(source.name)
+
+            # FIXME(importer): some of the groups are not defined as such in the original file
+            if target.id not in self.groups:
+                self.groups[target.id] = target
         else:
             self.permissions.add(TuplePermission(source, action, target))
 
