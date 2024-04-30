@@ -6,6 +6,17 @@ class SupportedService:
     service_principal: str
     description: str
 
+    def __eq__(self, other):
+        if not isinstance(other, SupportedService):
+            return False
+        return (self.service_principal, self.description) == (
+            other.service_principal,
+            other.description,
+        )
+
+    def __hash__(self):
+        return hash((self.service_principal, self.description))
+
     def __str__(self):
         return f"{self.service_principal} - {self.description}"
 

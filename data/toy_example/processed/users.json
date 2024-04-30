@@ -3,29 +3,29 @@
         {
             "AttachedPolicies": [
                 {
-                    "ID": "arn:aws:iam::policy/AdvancedUserPolicy"
+                    "ID": "custom_id_policy/AdvancedUserPolicy"
                 }
             ],
-            "ID": "arn:aws:iam::user/Alice"
+            "ID": "custom_id_user/Alice"
         },
         {
             "AttachedPolicies": [
                 {
-                    "ID": "arn:aws:iam::policy/AdvancedUserPolicy"
+                    "ID": "custom_id_policy/AdvancedUserPolicy"
                 }
             ],
-            "ID": "arn:aws:iam::user/Bob"
+            "ID": "custom_id_user/Bob"
         },
         {
-            "ID": "arn:aws:iam::user/Eve"
+            "ID": "custom_id_user/Eve"
         },
         {
             "AttachedPolicies": [
                 {
-                    "ID": "arn:aws:iam::policy/AdminAccess"
+                    "ID": "custom_id_policy/AdminAccess"
                 }
             ],
-            "ID": "arn:aws:iam::user/Admin"
+            "ID": "custom_id_user/Admin"
         }
     ]
 }

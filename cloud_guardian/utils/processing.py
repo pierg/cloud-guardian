@@ -16,7 +16,7 @@ def process_json_data(data):
         for key in list(data.keys()):
             if key in keys_to_remove:
                 del data[key]
-            elif isinstance(data[key], str) and "arn:" in data[key]:
+            elif (isinstance(data[key], str) and "arn:" in data[key]) or "Arn" in key:
                 data["ID"] = data.pop(key)
             else:
                 process_json_data(data[key])

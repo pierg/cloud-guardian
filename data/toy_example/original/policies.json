@@ -2,7 +2,7 @@
     "IdentityBasedPolicies": [
       {
         "PolicyName": "BasicUserPolicy",
-        "PolicyArn": "arn:aws:iam::policy/BasicUserPolicy",
+        "PolicyArn": "custom_id_policy/BasicUserPolicy",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -20,7 +20,7 @@
       },
       {
         "PolicyName": "AdvancedUserPolicy",
-        "PolicyArn": "arn:aws:iam::policy/AdvancedUserPolicy",
+        "PolicyArn": "custom_id_policy/AdvancedUserPolicy",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -39,7 +39,7 @@
       },
       {
         "PolicyName": "CreateUserPolicy",
-        "PolicyArn": "arn:aws:iam::policy/CreateUserPolicy",
+        "PolicyArn": "custom_id_policy/CreateUserPolicy",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -56,7 +56,7 @@
       },
       {
         "PolicyName": "AdminAccess",
-        "PolicyArn": "arn:aws:iam::policy/AdminAccess",
+        "PolicyArn": "custom_id_policy/AdminAccess",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -77,21 +77,21 @@
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::group/BasicUsers"
+                          "ID": "custom_id___custom__:group/BasicUsers"
                       },
                       "Action": [
                           "s3:GetObject",
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::company-files",
-                          "arn:aws:s3:::company-files/*"
+                          "_custom_s3_id_:company-files",
+                          "_custom_s3_id_:company-files/*"
                       ]
                   },
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::role/SuperUserRole"
+                          "ID": "custom_id_role/SuperUserRole"
                       },
                       "Action": [
                           "s3:GetObject",
@@ -100,8 +100,8 @@
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::company-files",
-                          "arn:aws:s3:::company-files/*"
+                          "_custom_s3_id_:company-files",
+                          "_custom_s3_id_:company-files/*"
                       ]
                   }
               ]
@@ -114,7 +114,7 @@
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::group/BasicUsers"
+                          "ID": "custom_id___custom__:group/BasicUsers"
                       },
                       "Action": [
                           "s3:GetObject",
@@ -122,14 +122,14 @@
                           "s3:PutObject"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::user-files",
-                          "arn:aws:s3:::user-files/*"
+                          "_custom_s3_id_:user-files",
+                          "_custom_s3_id_:user-files/*"
                       ]
                   },
                   {
                       "Effect": "Allow",
                       "Principal": {
-                          "ID": "arn:aws:iam::role/SuperUserRole"
+                          "ID": "custom_id_role/SuperUserRole"
                       },
                       "Action": [
                           "s3:GetObject",
@@ -138,8 +138,8 @@
                           "s3:ListBucket"
                       ],
                       "Resource": [
-                          "arn:aws:s3:::user-files",
-                          "arn:aws:s3:::user-files/*"
+                          "_custom_s3_id_:user-files",
+                          "_custom_s3_id_:user-files/*"
                       ]
                   }
               ]

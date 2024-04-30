@@ -20,13 +20,12 @@ def create_user_and_access_keys(iam, user_name: str):
         # Create the user
         user_response = iam.create_user(UserName=user_name)
         user_arn = user_response["User"]["Arn"]
-        logger.info(f"User {user_name} created with ARN: {user_arn}")
 
         # Create access keys for the user
         keys_response = iam.create_access_key(UserName=user_name)
         access_key_id = keys_response["AccessKey"]["AccessKeyId"]
         secret_access_key = keys_response["AccessKey"]["SecretAccessKey"]
-        logger.info(f"Access keys created for user {user_name}")
+        logger.info(f"User {user_name} created with ARN: {user_arn}")
 
         return {
             "Arn": user_arn,
